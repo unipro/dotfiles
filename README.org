@@ -50,8 +50,8 @@ Example content of `~/.gitconfig.local`:
 
 ** See Also
 
-[[https://github.com/unipro/.bashrc.d][My bash files]]
-[[https://github.com/unipro/.doom.d][My doom emacs files]]
+- [[https://github.com/unipro/.bashrc.d][My bash files]]
+- [[https://github.com/unipro/.doom.d][My doom emacs files]]
 
 ** License
 Feel free to use and modify these files as needed.
