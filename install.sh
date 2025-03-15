@@ -17,7 +17,7 @@ done
 
 # Ensure $HOME/.bashrc.d/init is sourced in $HOME/.bashrc
 if [ -f "$HOME/.bashrc" ]; then
-    if ! grep -q "\. $HOME/.bashrc.d/init" "$HOME/.bashrc"; then
+    if ! grep -q "\. ~/.bashrc.d/init" "$HOME/.bashrc"; then
         echo "Appending $HOME/.bashrc.d/init sourcing to $HOME/.bashrc"
         echo -e "\n# My bash configuration\nif [ -f ~/.bashrc.d/init ]; then\n    . ~/.bashrc.d/init\nfi" >> "$HOME/.bashrc"
     fi
