@@ -1,0 +1,57 @@
+#+title: My .files
+
+This repository contains my personal configuration files (dotfiles) for various applications and tools.
+
+** What is a Dotfile?
+Dotfiles are configuration files for Unix-based systems that start with a dot (.), such as:
+
+~/.gitconfig
+
+These files store user preferences and settings for different command-line tools, text editors, and system behaviors.
+
+** Installation
+To set up these dotfiles on a new system, you can clone the repository and create symbolic links:
+
+#+begin_src sh
+git clone https://github.com/unipro/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+./install.sh # If an installation script is provided
+#+end_src
+
+** Managing Updates
+To update dotfiles:
+
+#+begin_src sh
+cd ~/dotfiles
+git pull origin main
+#+end_src
+
+Make modifications and commit changes:
+
+#+begin_src sh
+git add .
+git commit -m "Update configurations"
+git push origin main
+#+end_src
+
+** Local Git Configuration
+To set system-specific Git configurations, you can use `~/.gitconfig.local`. This file is not included in the repository and should be created separately for each system.
+
+Example content of `~/.gitconfig.local`:
+
+#+begin_src ini
+[user]
+    name = Byungwan Jun
+    email = unipro.kr@gmail.com
+
+[credential]
+    helper = osxkeychain
+#+end_src
+
+** See Also
+
+[[https://github.com/unipro/.bashrc.d][My bash files]]
+[[https://github.com/unipro/.doom.d][My doom emacs files]]
+
+** License
+Feel free to use and modify these files as needed.
