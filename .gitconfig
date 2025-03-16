@@ -1,3 +1,6 @@
+#
+# clearly makes git better
+#
 [column]
 	ui = auto
 [branch]
@@ -15,12 +18,14 @@
 	default = simple
 	autoSetupRemote = true
 	followTags = true
-[pull]
-#	rebase = true
 [fetch]
 	prune = true
 	pruneTags = true
 	all = true
+
+#
+# why the hell not?
+#
 [help]
 	autocorrect = prompt
 [commit]
@@ -30,13 +35,25 @@
 	autoupdate = true
 [core]
 	excludesfile = ~/.gitignore
-#	fsmonitor = true
-#	untrackedCache = true
-[merge]
-#	conflictstyle = zdiff3
 [rebase]
 	autoSquash = true
 	autoStash = true
 	updateRefs = true
+
+#
+# a matter of taste (uncomment if you dare)
+#
+[core]
+	# fsmonitor = true
+	# untrackedCache = true
+[merge]
+	# (just 'diff3' if git version < 2.3)
+	# conflictstyle = zdiff3
+[pull]
+	# rebase = true
+
+#
+# An additional Git configuration file on the local machine.
+#
 [includeIf "exists:~/.gitconfig.local"]
 	path = ~/.gitconfig.local
