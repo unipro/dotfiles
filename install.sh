@@ -42,10 +42,10 @@ if [ ! -f "$HOME/.gitconfig.local" ]; then
     touch "$HOME/.gitconfig.local"
 fi
 
+echo -e "\n#\n# An additional Git configuration file on the local machine.\n#" >> "$HOME/.gitconfig"
 if version_lt "$GIT_VERSION" "$REQUIRED_VERSION"; then
     cat "$HOME/.gitconfig.local" >> "$HOME/.gitconfig"
 else
-    echo -e "\n#\n# An additional Git configuration file on the local machine.\n#" >> "$HOME/.gitconfig"
     echo -e "[includeIf \"exists:~/.gitconfig.local\"]\n\tpath = ~/.gitconfig.local" >> "$HOME/.gitconfig"
 fi
 
