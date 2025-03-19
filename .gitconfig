@@ -51,9 +51,3 @@
 	# conflictstyle = zdiff3
 [pull]
 	# rebase = true
-
-#
-# An additional Git configuration file on the local machine.
-#
-[includeIf "exists:~/.gitconfig.local"]
-	path = ~/.gitconfig.local
