@@ -1,5 +1,34 @@
 #!/usr/bin/env bash
 
+usage() {
+    echo "Usage: install.sh [--append-gitlocal]" >&2
+    echo "  --append-gitlocal, -a   : appending .gitconfig.local to the end of .gitconfig" >&2
+}
+
+ARGS=$(getopt ha "$@" 2>/dev/null)
+if [ $? -ne 0 ]; then
+    usage
+    exit 1
+fi
+set -- $ARGS
+
+APPEND_GITLOCAL=0
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h)
+            usage
+            exit 0
+            ;;
+        -a)
+            APPEND_GITLOCAL=1
+            shift
+            ;;
+        --)
+            shift; break ;;
+    esac
+done
+
 version_lt() {
     [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]
 }
@@ -43,7 +72,7 @@ if [ ! -f "$HOME/.gitconfig.local" ]; then
 fi
 
 echo -e "\n#\n# An additional Git configuration file on the local machine.\n#" >> "$HOME/.gitconfig"
-if version_lt "$GIT_VERSION" "$REQUIRED_VERSION"; then
+if [ $APPEND_GITLOCAL -eq 1 ] || version_lt "$GIT_VERSION" "$REQUIRED_VERSION"; then
     cat "$HOME/.gitconfig.local" >> "$HOME/.gitconfig"
 else
     echo -e "[includeIf \"exists:~/.gitconfig.local\"]\n\tpath = ~/.gitconfig.local" >> "$HOME/.gitconfig"
