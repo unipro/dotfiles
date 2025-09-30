@@ -1,0 +1,16 @@
+# clang-format
+
+# Use 4 spaces for indentation
+TabWidth: 4
+IndentWidth: 4
+UseTab: Never
+
+# Break braces for function definitions only (like Linux style)
+BreakBeforeBraces: Linux
+
+# Optional enhancements for readability and consistency
+AllowShortIfStatementsOnASingleLine: false      # Force full braces for if/else
+IndentCaseLabels: true                          # Indent case labels inside switch
+AlignConsecutiveAssignments: true               # Align variable assignments
+AlignOperands: true                             # Align binary operators in multiline expressions
+ColumnLimit: 100                                # Recommended line length limit

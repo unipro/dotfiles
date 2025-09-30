@@ -36,6 +36,7 @@ version_lt() {
 # List of dotfiles to manage
 DOTFILES=(
     ".gitconfig"
+    ".clang-format"
 )
 
 # Backup existing dotfiles and copy new ones
