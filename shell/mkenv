@@ -1,0 +1,384 @@
+#!/usr/bin/env bash
+
+add_bin_path () {
+    local path="$1"
+    if [ -d "$path" ]; then
+        case ":${MY_PATH}:" in
+            *:"$path":*)
+            ;;
+            *)
+                MY_PATH="$path:${MY_PATH:+$MY_PATH}"
+                ;;
+        esac
+    fi
+}
+
+add_man_path () {
+    local path="$1"
+    if [ -d "$path" ]; then
+        # Check if already in system manpath
+        case ":$(manpath 2>/dev/null):" in
+            *:"$path":*)
+                return
+                ;;
+        esac
+        if [ "${OSTYPE:0:6}" == "darwin" ]; then
+            # macOS: accumulate in MY_MANPATH for env export
+            MY_MANPATH="${MY_MANPATH:+$MY_MANPATH:}:$path"
+        else
+            # Linux: use ~/.manpath with MANDATORY_MANPATH
+            if [ -f "$HOME/.manpath" ] && grep -q "^MANDATORY_MANPATH $path$" "$HOME/.manpath"; then
+                return
+            fi
+            echo "MANDATORY_MANPATH $path" >> "$HOME/.manpath"
+        fi
+    fi
+}
+
+add_pkg_config_path () {
+    local path="$1"
+    if [ -d "$path" ]; then
+        case ":${MY_PKG_CONFIG_PATH}:" in
+            *:"$path":*)
+            ;;
+            *)
+                MY_PKG_CONFIG_PATH="$path:${MY_PKG_CONFIG_PATH:+$MY_PKG_CONFIG_PATH}"
+                ;;
+        esac
+    fi
+}
+
+if [ "${OSTYPE:0:6}" == "darwin" ]; then
+    ######################################################################
+    # MacPorts
+    ######################################################################
+
+    # GNU coreutils in MacPorts
+    # add_bin_path "/opt/local/libexec/gnubin"
+
+    add_bin_path "/opt/local/bin"
+    add_pkg_config_path "/opt/local/lib/pkgconfig"
+
+    ######################################################################
+    # Homebrew
+    ######################################################################
+
+    BREW_PREFIX="$(brew --prefix)"
+    add_pkg_config_path "$BREW_PREFIX/lib/pkgconfig"
+
+    # GNU coreutils in homebrew
+    # add_bin_path "$BREW_PREFIX/opt/coreutils/libexec/gnubin"
+
+    add_pkg_config_path "$BREW_PREFIX/opt/readline/lib/pkgconfig"
+
+    add_pkg_config_path "$BREW_PREFIX/opt/zlib/lib/pkgconfig"
+
+    add_bin_path "$BREW_PREFIX/opt/bzip2/bin"
+    add_pkg_config_path "$BREW_PREFIX/opt/bzip2/lib/pkgconfig"
+
+    add_bin_path "$BREW_PREFIX/opt/ncurses/bin"
+    add_pkg_config_path "$BREW_PREFIX/opt/ncurses/lib/pkgconfig"
+
+    add_bin_path "$BREW_PREFIX/opt/icu4c/bin"
+    add_bin_path "$BREW_PREFIX/opt/icu4c/sbin"
+    add_pkg_config_path "$BREW_PREFIX/opt/icu4c/lib/pkgconfig"
+
+    # add_bin_path "$BREW_PREFIX/opt/openssl@1.1/bin"
+    # add_pkg_config_path "$BREW_PREFIX/opt/openssl@1.1/lib/pkgconfig"
+    add_bin_path "$BREW_PREFIX/opt/openssl/bin"
+    add_pkg_config_path "$BREW_PREFIX/opt/openssl/lib/pkgconfig"
+
+    add_bin_path "$BREW_PREFIX/opt/curl/bin"
+    add_pkg_config_path "$BREW_PREFIX/opt/curl/lib/pkgconfig"
+
+    add_pkg_config_path "$BREW_PREFIX/opt/libffi/lib/pkgconfig"
+
+    add_bin_path "$BREW_PREFIX/opt/sqlite/bin"
+    add_pkg_config_path "$BREW_PREFIX/opt/sqlite/lib/pkgconfig"
+
+    add_bin_path "$BREW_PREFIX/opt/qt/bin"
+    add_pkg_config_path "$BREW_PREFIX/opt/qt/lib/pkgconfig"
+
+    add_bin_path "$BREW_PREFIX/opt/jpeg/bin"
+    add_pkg_config_path "$BREW_PREFIX/opt/jpeg/lib/pkgconfig"
+
+    add_bin_path "$BREW_PREFIX/opt/man-db/libexec/bin"
+
+    # llvm
+    add_bin_path "$BREW_PREFIX/opt/llvm/bin"
+
+    # python
+    add_bin_path "/Library/Frameworks/Python.framework/Versions/Current/bin"
+
+    # nodejs
+    add_bin_path "$BREW_PREFIX/opt/node@22/bin"
+
+    # ruby
+    add_bin_path "$BREW_PREFIX/opt/ruby/bin"
+    add_pkg_config_path "$BREW_PREFIX/opt/ruby/lib/pkgconfig"
+
+    # guile 3.0
+    if [ -d "$BREW_PREFIX/share/guile/site/3.0" ]; then
+        MY_GUILE_LOAD_PATH="$BREW_PREFIX/share/guile/site/3.0"
+        MY_GUILE_LOAD_COMPILED_PATH="$BREW_PREFIX/lib/guile/3.0/site-ccache"
+        MY_GUILE_SYSTEM_EXTENSIONS_PATH="$BREW_PREFIX/lib/guile/3.0/extensions"
+    fi
+
+    if [ -f "$BREW_PREFIX/bin/guile" ]; then
+        MY_GUILE_TLS_CERTIFICATE_DIRECTORY="$BREW_PREFIX/etc/gnutls/"
+    fi
+
+    # docbook
+    if [ -f "$BREW_PREFIX/etc/xml/catalog" ]; then
+        MY_XML_CATALOG_FILES="$BREW_PREFIX/etc/xml/catalog"
+    fi
+
+    # Java
+    MY_JAVA_HOME="$(/usr/libexec/java_home)"
+
+    # mysql@8.4
+    add_bin_path "$BREW_PREFIX/opt/mysql@8.4/bin"
+    add_pkg_config_path "$BREW_PREFIX/opt/mysql@8.4/lib/pkgconfig"
+
+    # mysql-client@8.4
+    add_bin_path "$BREW_PREFIX/opt/mysql-client@8.4/bin"
+    add_pkg_config_path "$BREW_PREFIX/opt/mysql-client@8.4/lib/pkgconfig"
+
+    # if you need to have gnu-getopt
+    # add_pkg_path "$BREW_PREFIX/opt/gnu-getopt/bin"
+
+    # protobuf@21
+    # add_bin_path "$BREW_PREFIX/opt/protobuf@21/bin"
+    # add_pkg_config_path "$BREW_PREFIX/opt/protobuf@21/lib/pkgconfig"
+
+    # ffmpeg@4
+    # add_bin_path "$BREW_PREFIX/opt/ffmpeg@4/bin"
+    # add_pkg_config_path "$BREW_PREFIX/opt/ffmpeg@4/lib/pkgconfig"
+
+    # ffmpeg@5
+    # add_bin_path "$BREW_PREFIX/opt/ffmpeg@5/bin"
+    # add_pkg_config_path "$BREW_PREFIX/opt/ffmpeg@5/lib/pkgconfig"
+
+    # ffmpeg@6
+    # add_bin_path "$BREW_PREFIX/opt/ffmpeg@6/bin"
+    # add_pkg_config_path "$BREW_PREFIX/opt/ffmpeg@6/lib/pkgconfig"
+
+    # ffmpeg@7
+    # add_bin_path "$BREW_PREFIX/opt/ffmpeg@7/bin"
+    # add_pkg_config_path "$BREW_PREFIX/opt/ffmpeg@7/lib/pkgconfig"
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ] ; then
+    add_bin_path "$HOME/bin"
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ] ; then
+    add_bin_path "$HOME/.local/bin"
+fi
+
+# rust
+if [ -d "$HOME/.cargo/bin" ]; then
+    add_bin_path "$HOME/.cargo/bin"
+    if command -v rustc &> /dev/null; then
+        MY_RUST_SRC_PATH="$(rustc --print sysroot)/lib/rustlib/src/rust/src"
+    fi
+fi
+if [ -f "$HOME/.cargo/env" ]; then
+    MY_CARGO_ENV="$HOME/.cargo/env"
+fi
+
+
+# go
+MY_GOPATH="${HOME}/go"
+add_bin_path "$MY_GOPATH/bin"
+
+# node
+add_bin_path "$HOME/node_modules/.bin"
+if [ -d "$HOME/.nvm" ]; then
+    MY_NVM_DIR="$HOME/.nvm"
+    if [ -f "$NVM_DIR/nvm.sh" ]; then
+        MY_NVM_SH="$MY_NVM_DIR/nvm.sh"
+    fi
+    if [ -f "$NVM_DIR/bash_completion" ]; then
+        MY_NVM_COMPLETION="$MY_NVM_DIR/bash_completion"
+    fi
+elif [ -d "$BREW_PREFIX/opt/nvm" ]; then
+    MY_NVM_DIR="$BREW_PREFIX/opt/nvm"
+    MY_NVM_SH="$BREW_PREFIX/opt/nvm/nvm.sh"
+    MY_NVM_COMPLETION="$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
+fi
+if [ -d "${HOME}/.npm-packages" ]; then
+    MY_NPM_PACKAGES="${HOME}/.npm-packages"
+    MY_NODE_PATH="$NPM_PACKAGES/lib/node_modules"
+
+    add_bin_path "$NPM_PACKAGES/bin"
+    add_man_path "$NPM_PACKAGES/share/man"
+fi
+
+# php
+add_bin_path "${HOME}/.composer/vendor/bin"
+
+# python
+add_bin_path "${HOME}/.pyenv/bin"
+
+# emacs
+add_bin_path "$HOME/.emacs.d/bin"
+add_bin_path "$HOME/.config/emacs/bin"
+
+# GStreamer (installed from gstreamer.freedesktop.org)
+if [ -d "/Library/Frameworks/GStreamer.framework/Versions/1.0" ]; then
+    add_bin_path "/Library/Frameworks/GStreamer.framework/Versions/1.0/bin"
+    add_pkg_config_path "/Library/Frameworks/GStreamer.framework/Versions/1.0/lib/pkgconfig"
+fi
+
+# All gst-* GStreamer plugins are now bundled in this formula.
+# For GStreamer to find your own plugins, add their paths to `GST_PLUGIN_PATH`.
+if [ -d "$HOME/.local/lib/gstreamer-1.0" ];then
+    MY_GST_PLUGIN_PATH="$HOME/.local/lib/gstreamer-1.0"
+fi
+
+# pyenv
+if command -v pyenv &> /dev/null; then
+    eval "$(pyenv init --path)"
+fi
+
+{
+    echo "export PATH=\"$MY_PATH\$PATH\""
+    if [ -n "$MY_PKG_CONFIG_PATH" ]; then
+        echo "export PKG_CONFIG_PATH=\"$MY_PKG_CONFIG_PATH\${PKG_CONFIG_PATH}\""
+    fi
+    if [ -n "$MY_MANPATH" ]; then
+        echo "export MANPATH=\"$MY_MANPATH:\${MANPATH}\""
+    fi
+    if [ -n "$MY_RUST_SRC_PATH" ]; then
+        echo "export RUST_SRC_PATH=\"$MY_RUST_SRC_PATH\""
+    fi
+    if [ -n "$MY_CARGO_ENV" ]; then
+        echo "source \"$MY_CARGO_ENV\""
+    fi
+    if [ -n "$MY_GOPATH" ]; then
+        echo "export GOPATH=\"$MY_GOPATH\""
+    fi
+    if [ -n "$MY_NVM_DIR" ]; then
+        echo "export NVM_DIR=\"$MY_NVM_DIR\""
+        echo "source $MY_NVM_SH"
+        echo "source $MY_NVM_COMPLETION"
+    fi
+    if [ -n "$MY_NPM_PACKAGES" ]; then
+        echo "export NPM_PACKAGES=\"$MY_NPM_PACKAGES\""
+        echo "export NODE_PATH=\"$MY_NODE_PATH:\$NODE_PATH\""
+    fi
+
+    if [ -n "$MY_GUILE_LOAD_PATH" ]; then
+        echo "export GUILE_LOAD_PATH=\"$MY_GUILE_LOAD_PATH\""
+        echo "export GUILE_SYSTEM_EXTENSIONS_PATH=\"$MY_GUILE_SYSTEM_EXTENSIONS_PATH\""
+        echo "export GUILE_LOAD_COMPILED_PATH=\"$MY_GUILE_LOAD_COMPILED_PATH\""
+    fi
+    if [ -n "$MY_GUILE_TLS_CERTIFICATE_DIRECTORY" ]; then
+        echo "export GUILE_TLS_CERTIFICATE_DIRECTORY=\"$MY_GUILE_TLS_CERTIFICATE_DIRECTORY\""
+    fi
+
+    if [ -n "$MY_XML_CATALOG_FILES" ]; then
+        echo "export XML_CATALOG_FILES=\"$MY_XML_CATALOG_FILES\""
+    fi
+
+    if [ -n "$MY_JAVA_HOME" ]; then
+        echo "export JAVA_HOME=\"$MY_JAVA_HOME\""
+    fi
+
+    if [ -d "$HOME/perl5/lib/perl5" ]; then
+        echo "eval \"$(perl -I\$HOME/perl5/lib/perl5 -Mlocal::lib=$HOME/perl5)\""
+    fi
+
+    if [ -n "$MY_GST_PLUGIN_PATH" ]; then
+        echo "export GST_PLUGIN_PATH=\"$MY_GST_PLUGIN_PATH\""
+    fi
+} > "$HOME/.config/bash/env"
+
+# pyenv
+if command -v pyenv &> /dev/null; then
+    pyenv virtualenv-init - >> "$HOME/.config/bash/env"
+fi
+
+# direnv
+if command -v direnv &> /dev/null; then
+    direnv hook bash >> "$HOME/.config/bash/env"
+fi
+
+######################################################################
+# Generate zsh env
+######################################################################
+
+mkdir -p "$HOME/.config/zsh"
+
+{
+    echo "export PATH=\"$MY_PATH:\$PATH\""
+    if [ -n "$MY_PKG_CONFIG_PATH" ]; then
+        echo "export PKG_CONFIG_PATH=\"$MY_PKG_CONFIG_PATH:\${PKG_CONFIG_PATH}\""
+    fi
+    if [ -n "$MY_MANPATH" ]; then
+        echo "export MANPATH=\"$MY_MANPATH:\${MANPATH}\""
+    fi
+    if [ -n "$MY_RUST_SRC_PATH" ]; then
+        echo "export RUST_SRC_PATH=\"$MY_RUST_SRC_PATH\""
+    fi
+    if [ -n "$MY_CARGO_ENV" ]; then
+        echo "source \"$MY_CARGO_ENV\""
+    fi
+    if [ -n "$MY_GOPATH" ]; then
+        echo "export GOPATH=\"$MY_GOPATH\""
+    fi
+    if [ -n "$MY_NVM_DIR" ]; then
+        echo "export NVM_DIR=\"$MY_NVM_DIR\""
+        echo "source $MY_NVM_SH"
+        if [ -f "$MY_NVM_DIR/bash_completion" ]; then
+            echo "autoload -U +X bashcompinit && bashcompinit"
+            echo "source $MY_NVM_DIR/bash_completion"
+        fi
+    fi
+    if [ -n "$MY_NPM_PACKAGES" ]; then
+        echo "export NPM_PACKAGES=\"$MY_NPM_PACKAGES\""
+        echo "export NODE_PATH=\"$MY_NODE_PATH:\$NODE_PATH\""
+    fi
+
+    if [ -n "$MY_GUILE_LOAD_PATH" ]; then
+        echo "export GUILE_LOAD_PATH=\"$MY_GUILE_LOAD_PATH\""
+        echo "export GUILE_SYSTEM_EXTENSIONS_PATH=\"$MY_GUILE_SYSTEM_EXTENSIONS_PATH\""
+        echo "export GUILE_LOAD_COMPILED_PATH=\"$MY_GUILE_LOAD_COMPILED_PATH\""
+    fi
+    if [ -n "$MY_GUILE_TLS_CERTIFICATE_DIRECTORY" ]; then
+        echo "export GUILE_TLS_CERTIFICATE_DIRECTORY=\"$MY_GUILE_TLS_CERTIFICATE_DIRECTORY\""
+    fi
+
+    if [ -n "$MY_XML_CATALOG_FILES" ]; then
+        echo "export XML_CATALOG_FILES=\"$MY_XML_CATALOG_FILES\""
+    fi
+
+    if [ -n "$MY_JAVA_HOME" ]; then
+        echo "export JAVA_HOME=\"$MY_JAVA_HOME\""
+    fi
+
+    if [ -d "$HOME/perl5/lib/perl5" ]; then
+        echo "eval \"$(perl -I\$HOME/perl5/lib/perl5 -Mlocal::lib=$HOME/perl5)\""
+    fi
+
+    if [ -n "$MY_GST_PLUGIN_PATH" ]; then
+        echo "export GST_PLUGIN_PATH=\"$MY_GST_PLUGIN_PATH\""
+    fi
+} > "$HOME/.config/zsh/env"
+
+# pyenv
+if command -v pyenv &> /dev/null; then
+    pyenv virtualenv-init - zsh >> "$HOME/.config/zsh/env"
+fi
+
+# direnv
+if command -v direnv &> /dev/null; then
+    direnv hook zsh >> "$HOME/.config/zsh/env"
+fi
+
+# Local Variables:
+# mode: shell-script
+# End:

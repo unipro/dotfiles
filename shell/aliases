@@ -1,0 +1,46 @@
+# ~/.config/bash/aliases
+
+# User specific aliases
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+alias diff='diff --strip-trailing-cr'
+alias ec='emacsclient -c -a emacs'
+alias et='emacsclient -t -a emacs'
+
+alias cd..='cd ..'
+
+case "$OSTYPE" in
+    linux-gnu*)
+        ;;
+    darwin*)
+        alias lx='ls -le@'
+        ;;
+esac
+
+
+echoerr() { echo "$@" 1>&2; }
+
+do_ff() {
+    [ $# -lt 1 ] && echoerr "error: no find name" && return 1
+    find . -name "*${1}*" -ls
+}
+alias ff=do_ff
+
+do_find_dot() {
+    [ $# -lt 1 ] && echoerr "error: no find expression" && return 1
+    find . \( -type d ! -name . -prune \) -o \( "$@" -print \)
+}
+alias find.=do_find_dot
+
+do_find_dot_ls() {
+    [ $# -lt 1 ] && echoerr "error: no find expression" && return 1
+    find . \( -type d ! -name . -prune \) -o \( "$@" -ls \)
+}
+alias find.ls=do_find_dot_ls
+
+alias stop='kill -STOP'
+
+# Local Variables:
+# mode: shell-script
+# End:

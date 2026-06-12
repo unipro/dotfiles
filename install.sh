@@ -15,12 +15,14 @@ DOTFILES=(
 DOTCONFIG_DIR="dotconfig"
 XDG_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 
+# Shell login scripts: shell/* → ~/.config/bash/ (sourced from ~/.bashrc
+# via init; mkenv regenerates the machine-specific env file).
+SHELL_SRC_DIR="shell"
+BASH_CONFIG_DIR="$XDG_CONFIG_DIR/bash"
+
 # Git gained `includeIf "exists:..."` in 2.43.0. On older Git we
 # inline .gitconfig.local instead of including it by reference.
 REQUIRED_GIT_VERSION="2.43.0"
-
-# Repo where the sourced ~/.bashrc.d/init lives.
-BASHRC_D_REPO="https://github.com/unipro/.bashrc.d.git"
 
 APPEND_GITLOCAL=0
 
@@ -35,6 +37,16 @@ EOF
 # version_lt A B → true when version A is strictly older than B.
 version_lt() {
     [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ] && [ "$1" != "$2" ]
+}
+
+# Display a path with $HOME collapsed to ~ for tidier messages.
+tilde() {
+    # The ~ below is a literal display string, not a path to expand.
+    # shellcheck disable=SC2088
+    case "$1" in
+        "$HOME"/*) printf '~/%s' "${1#"$HOME"/}" ;;
+        *)         printf '%s' "$1" ;;
+    esac
 }
 
 parse_args() {
@@ -60,9 +72,28 @@ parse_args() {
     done
 }
 
-# Copy each managed dotfile into $HOME, preserving the original (if
-# any) as <file>.backup. An existing backup is never overwritten, so
-# re-running the script keeps the user's true original safe.
+# Copy every file under src_dir into dest_dir, preserving relative
+# subpaths. An existing target is moved aside to <file>.backup, but a
+# pre-existing backup is never overwritten — so re-running keeps the
+# user's true original safe.
+copy_tree() {
+    local src_dir="$1" dest_dir="$2"
+    [ -d "$src_dir" ] || return 0
+    local src rel dest
+    while IFS= read -r src; do
+        rel="${src#"$src_dir"/}"
+        dest="$dest_dir/$rel"
+        if [ -f "$dest" ] && [ ! -f "$dest.backup" ]; then
+            echo "Backing up existing $(tilde "$dest") to $(tilde "$dest").backup"
+            mv "$dest" "$dest.backup"
+        fi
+        mkdir -p "$(dirname "$dest")"
+        echo "Copying $rel to $(tilde "$dest_dir")"
+        cp "$src" "$dest"
+    done < <(find "$src_dir" -type f)
+}
+
+# Copy the managed dotfiles into $HOME.
 install_dotfiles() {
     local file
     for file in "${DOTFILES[@]}"; do
@@ -75,44 +106,44 @@ install_dotfiles() {
     done
 }
 
-# Mirror the dotconfig/ tree into $XDG_CONFIG_DIR (~/.config by
-# default), preserving any existing file as <file>.backup. An existing
-# backup is never overwritten, so re-running keeps the original safe.
-install_dotconfig() {
-    [ -d "$DOTCONFIG_DIR" ] || return 0
-    local src rel dest
-    while IFS= read -r src; do
-        rel="${src#"$DOTCONFIG_DIR"/}"
-        dest="$XDG_CONFIG_DIR/$rel"
-        if [ -f "$dest" ] && [ ! -f "$dest.backup" ]; then
-            echo "Backing up existing .config/$rel to .config/$rel.backup"
-            mv "$dest" "$dest.backup"
-        fi
-        mkdir -p "$(dirname "$dest")"
-        echo "Copying $rel to $XDG_CONFIG_DIR"
-        cp "$src" "$dest"
-    done < <(find "$DOTCONFIG_DIR" -type f)
+# Mirror dotconfig/ into ~/.config and shell/ into ~/.config/bash.
+install_config() {
+    copy_tree "$DOTCONFIG_DIR" "$XDG_CONFIG_DIR"
+    copy_tree "$SHELL_SRC_DIR" "$BASH_CONFIG_DIR"
 }
 
-# Make sure ~/.bashrc sources ~/.bashrc.d/init, and point the user at
-# the repo if that init script isn't present yet.
+# (Re)generate the machine-specific env files (~/.config/bash/env and
+# ~/.config/zsh/env) from the freshly installed mkenv.
+generate_shell_env() {
+    local mkenv="$BASH_CONFIG_DIR/mkenv"
+    [ -x "$mkenv" ] || return 0
+    echo "Generating shell env via $(tilde "$mkenv")"
+    bash "$mkenv"
+}
+
+# Make sure ~/.bashrc sources ~/.config/bash/init, migrating any legacy
+# ~/.bashrc.d/init reference to the new location.
 ensure_bashrc_init() {
     [ -f "$HOME/.bashrc" ] || return 0
 
-    if ! grep -q "\. ~/.bashrc.d/init" "$HOME/.bashrc"; then
-        echo "Appending $HOME/.bashrc.d/init sourcing to $HOME/.bashrc"
+    if grep -q '\.bashrc\.d/init' "$HOME/.bashrc"; then
+        echo "Migrating ~/.bashrc.d/init reference to ~/.config/bash/init in ~/.bashrc"
+        local tmp
+        tmp="$(mktemp)"
+        sed 's|\.bashrc\.d/init|.config/bash/init|g' "$HOME/.bashrc" >"$tmp"
+        cat "$tmp" >"$HOME/.bashrc"
+        rm -f "$tmp"
+    fi
+
+    if ! grep -q '\.config/bash/init' "$HOME/.bashrc"; then
+        echo "Appending ~/.config/bash/init sourcing to ~/.bashrc"
         cat >>"$HOME/.bashrc" <<'EOF'
 
 # My bash configuration
-if [ -f ~/.bashrc.d/init ]; then
-    . ~/.bashrc.d/init
+if [ -f ~/.config/bash/init ]; then
+    . ~/.config/bash/init
 fi
 EOF
-    fi
-
-    if [ ! -f "$HOME/.bashrc.d/init" ]; then
-        echo "$HOME/.bashrc.d/init not found. To install it, run the following command:"
-        echo "git clone $BASHRC_D_REPO $HOME/.bashrc.d"
     fi
 }
 
@@ -141,7 +172,8 @@ configure_git_local() {
 main() {
     parse_args "$@"
     install_dotfiles
-    install_dotconfig
+    install_config
+    generate_shell_env
     ensure_bashrc_init
     configure_git_local
     echo "Dotfiles installation complete!"

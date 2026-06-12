@@ -1,0 +1,53 @@
+# ~/.config/bash/init: executed by .bashrc
+
+# Add the next three lines to the end of .bashrc
+# if [ -f ~/.config/bash/init ]; then
+#     . ~/.config/bash/init
+# fi
+
+if [ -f "$HOME/.config/bash/env" ]; then
+    # shellcheck source=/dev/null
+    . "$HOME/.config/bash/env"
+fi
+
+export ALTERNATE_EDITOR=""
+export EDITOR="emacsclient -t"                  # $EDITOR opens in terminal
+export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode
+
+# enable programmable completion features
+if ! shopt -oq posix; then
+    if [ -f /etc/profile.d/bash_completion.sh ]; then
+        # shellcheck source=/dev/null
+        . /etc/profile.d/bash_completion.sh
+    elif [ -f "$HOME/.bash_completion" ]; then
+        # shellcheck source=/dev/null
+        . "$HOME/.bash_completion"
+    elif [ -f "$HOME/.config/bash/completion" ]; then
+        # shellcheck source=/dev/null
+        . "$HOME/.config/bash/completion"
+    fi
+
+    if [ "${OSTYPE:0:6}" == "darwin" ]; then
+        if [ -f "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]; then
+            # shellcheck source=/dev/null
+            . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
+        fi
+    fi
+
+fi
+
+# alias definitions
+if [ -f "$HOME/.config/bash/aliases" ]; then
+    # shellcheck source=/dev/null
+    . "$HOME/.config/bash/aliases"
+fi
+
+# private definitions
+if [ -f "$HOME/.config/bash/private" ]; then
+    # shellcheck source=/dev/null
+    . "$HOME/.config/bash/private"
+fi
+
+# Local Variables:
+# mode: shell-script
+# End:

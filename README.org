@@ -48,9 +48,29 @@ Example content of `~/.gitconfig.local`:
     helper = osxkeychain
 #+end_src
 
+** Shell Configuration
+The bash login scripts live in =shell/= and are installed to
+=~/.config/bash/= by =install.sh=, which also wires =~/.bashrc= to
+source =~/.config/bash/init=.
+
+- =init=       : entry point sourced from =~/.bashrc=; loads the rest
+- =aliases=    : interactive aliases and helper functions
+- =completion= : user bash-completion loader
+- =mkenv=      : generates the machine-specific env files
+
+Run =mkenv= to (re)generate environment files for the current machine
+(=install.sh= runs it automatically):
+
+#+begin_src sh
+~/.config/bash/mkenv
+#+end_src
+
+This writes =~/.config/bash/env= (bash) and =~/.config/zsh/env= (zsh).
+Both =env= and a private =~/.config/bash/private= (for machine-local
+secrets/aliases) are git-ignored and never committed.
+
 ** See Also
 
-- [[https://github.com/unipro/.bashrc.d][My bash files]]
 - [[https://github.com/unipro/.doom.d][My doom emacs files]]
 
 ** License

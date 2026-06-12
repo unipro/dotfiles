@@ -1,0 +1,13 @@
+# source user completion directory definitions
+user_dir=${BASH_COMPLETION_USER_DIR:-~/.bash_completion.d}
+if [[ -d $user_dir && -r $user_dir && -x $user_dir ]]; then
+    for i in "$user_dir"/*; do
+        [[ ${i##*/} != @($_backup_glob|Makefile*|$_blacklist_glob) \
+            && -f $i && -r $i ]] && . "$i"
+    done
+fi
+unset user_dir i _blacklist_glob
+
+# Local Variables:
+# mode: shell-script
+# End:
