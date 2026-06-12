@@ -10,23 +10,33 @@ Dotfiles are configuration files for Unix-based systems that start with a dot (.
 These files store user preferences and settings for different command-line tools, text editors, and system behaviors.
 
 ** Installation
-To set up these dotfiles on a new system, you can clone the repository and create symbolic links:
+To set up these dotfiles on a new system, clone the repository and run
+the install script:
 
 #+begin_src sh
 git clone https://github.com/unipro/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-./install.sh # If an installation script is provided
+./install.sh
 #+end_src
 
+=install.sh= *copies* the managed files into =$HOME= and =~/.config=
+(it does not create symlinks). Any existing target is moved aside to
+=<file>.backup= first, and a pre-existing =.backup= is never
+overwritten — so your original files stay safe and re-running is idempotent.
+
 ** Managing Updates
-To update dotfiles:
+Pull the latest changes and re-run the install script to propagate
+them (since files are copied, not symlinked, a =git pull= alone does
+not update the installed copies):
 
 #+begin_src sh
 cd ~/dotfiles
 git pull origin main
+./install.sh
 #+end_src
 
-Make modifications and commit changes:
+To contribute your own changes back, edit the files in the repository,
+then commit and push:
 
 #+begin_src sh
 git add .
