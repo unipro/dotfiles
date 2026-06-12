@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+[ -d ~/.emacs.d/.local/straight ] && rm -rf ~/.emacs.d/.local/straight
+rm -f ~/.emacs.d/.local/autoloads.*

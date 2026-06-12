@@ -69,9 +69,18 @@ This writes =~/.config/bash/env= (bash) and =~/.config/zsh/env= (zsh).
 Both =env= and a private =~/.config/bash/private= (for machine-local
 secrets/aliases) are git-ignored and never committed.
 
-** See Also
+** Doom Emacs
+The [[https://github.com/doomemacs/doomemacs][Doom Emacs]] configuration lives in =dotconfig/doom/= and is
+installed to =~/.config/doom/= by =install.sh=.
 
-- [[https://github.com/unipro/.doom.d][My doom emacs files]]
+- =init.el=     : enabled Doom modules
+- =config.el=   : personal configuration
+- =packages.el= : extra packages
+- =bin/=        : helper scripts
+
+Machine-local overrides go in =~/.config/doom/local.el= (and
+=custom.el=); both are git-ignored and never committed. After changing
+=init.el= or =packages.el=, run =doom sync=.
 
 ** License
 Feel free to use and modify these files as needed.

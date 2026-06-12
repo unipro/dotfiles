@@ -1,0 +1,14 @@
+#+title: Ian's personal doom-emacs settings
+#+author: Ian
+#+date: <2022-06-08 Wed>
+
+* Quick start
+
+#+begin_src shell
+git clone https://github.com/unipro/.doom.d.git ~/.config/doom
+doom sync
+#+end_src
+
+* Links
+
+[[https://github.com/doomemacs/doomemacs][doomemacs]]
