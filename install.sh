@@ -15,11 +15,13 @@ DOTFILES=(
 )
 
 # XDG config tree: dotconfig/<app>/... → $XDG_CONFIG_HOME/<app>/...
+# The bash config (dotconfig/bash/{init,aliases,completion}) is sourced
+# from the managed ~/.bashrc via init.
 DOTCONFIG_DIR="dotconfig"
 XDG_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 
-# Shell login scripts: shell/* → ~/.config/bash/ (sourced from the
-# managed ~/.bashrc via init; mkenv regenerates the machine env file).
+# The mkenv generator stays under shell/ and is installed alongside the
+# bash config; it regenerates the machine-specific env file.
 SHELL_SRC_DIR="shell"
 BASH_CONFIG_DIR="$XDG_CONFIG_DIR/bash"
 
@@ -109,7 +111,8 @@ install_dotfiles() {
     done
 }
 
-# Mirror dotconfig/ into ~/.config and shell/ into ~/.config/bash.
+# Mirror dotconfig/ into ~/.config and the mkenv generator into
+# ~/.config/bash alongside it.
 install_config() {
     copy_tree "$DOTCONFIG_DIR" "$XDG_CONFIG_DIR"
     copy_tree "$SHELL_SRC_DIR" "$BASH_CONFIG_DIR"

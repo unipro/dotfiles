@@ -68,12 +68,16 @@ OS differences (Homebrew vs Linuxbrew, =ls -G= vs =ls --color=auto=,
 so the same files work on both platforms.
 
 *** Reusable scripts (installed to =~/.config/bash/=)
-These live in =shell/= and are installed to =~/.config/bash/= by
-=install.sh=:
+The bash config lives in =dotconfig/bash/= (part of the XDG config
+tree) and is installed to =~/.config/bash/= by =install.sh=:
 
 - =init=       : entry point sourced from =~/.bashrc=; loads the rest
 - =aliases=    : interactive aliases and helper functions
 - =completion= : user bash-completion loader
+
+The =mkenv= generator stays under =shell/= (it builds files rather
+than being one) and =install.sh= installs it to =~/.config/bash/mkenv=:
+
 - =mkenv=      : generates the machine-specific env files
 
 Run =mkenv= to (re)generate environment files for the current machine

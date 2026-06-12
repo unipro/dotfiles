@@ -1,5 +1,5 @@
 .DS_Store
 
 # Machine-specific files generated/managed locally, never committed.
-shell/env
-shell/private
+dotconfig/bash/env
+dotconfig/bash/private
