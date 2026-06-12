@@ -20,9 +20,9 @@ DOTFILES=(
 DOTCONFIG_DIR="dotconfig"
 XDG_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 
-# The mkenv generator stays under shell/ and is installed alongside the
-# bash config; it regenerates the machine-specific env file.
-SHELL_SRC_DIR="shell"
+# The mkenv generator is installed alongside the bash config; it
+# regenerates the machine-specific env file.
+MKENV_SRC="mkenv"
 BASH_CONFIG_DIR="$XDG_CONFIG_DIR/bash"
 
 # Git gained `includeIf "exists:..."` in 2.43.0. On older Git we
@@ -111,11 +111,20 @@ install_dotfiles() {
     done
 }
 
-# Mirror dotconfig/ into ~/.config and the mkenv generator into
-# ~/.config/bash alongside it.
+# Mirror dotconfig/ into ~/.config and install the mkenv generator
+# into ~/.config/bash alongside it. An existing mkenv is moved aside to
+# mkenv.backup (a pre-existing backup is never overwritten).
 install_config() {
     copy_tree "$DOTCONFIG_DIR" "$XDG_CONFIG_DIR"
-    copy_tree "$SHELL_SRC_DIR" "$BASH_CONFIG_DIR"
+
+    local dest="$BASH_CONFIG_DIR/mkenv"
+    if [ -f "$dest" ] && [ ! -f "$dest.backup" ]; then
+        echo "Backing up existing $(tilde "$dest") to $(tilde "$dest").backup"
+        mv "$dest" "$dest.backup"
+    fi
+    mkdir -p "$BASH_CONFIG_DIR"
+    echo "Copying $MKENV_SRC to $(tilde "$BASH_CONFIG_DIR")"
+    cp "$MKENV_SRC" "$dest"
 }
 
 # (Re)generate the machine-specific env files (~/.config/bash/env and
