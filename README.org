@@ -49,9 +49,27 @@ Example content of `~/.gitconfig.local`:
 #+end_src
 
 ** Shell Configuration
-The bash login scripts live in =shell/= and are installed to
-=~/.config/bash/= by =install.sh=, which also wires =~/.bashrc= to
-source =~/.config/bash/init=.
+The bash configuration is split into two layers, both cross-platform
+(macOS and Linux):
+
+*** Login entry points (installed to =$HOME=)
+These are the standard bash startup files, kept as a single
+cross-platform version each and copied into =$HOME= by =install.sh=
+(an existing file is moved aside to =<file>.backup= first):
+
+- =.bash_profile= : login shells; bootstraps Homebrew, then sources
+  =~/.profile= and =~/.bashrc=
+- =.profile=      : POSIX login setup (private =bin= PATH, cargo env)
+- =.bashrc=       : interactive shells; history, prompt, =ls= colors,
+  then sources =~/.config/bash/init=
+
+OS differences (Homebrew vs Linuxbrew, =ls -G= vs =ls --color=auto=,
+=/etc/bashrc= vs =/etc/bash.bashrc=) are handled inline via =$OSTYPE=,
+so the same files work on both platforms.
+
+*** Reusable scripts (installed to =~/.config/bash/=)
+These live in =shell/= and are installed to =~/.config/bash/= by
+=install.sh=:
 
 - =init=       : entry point sourced from =~/.bashrc=; loads the rest
 - =aliases=    : interactive aliases and helper functions

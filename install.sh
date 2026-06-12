@@ -9,14 +9,17 @@ set -eu
 DOTFILES=(
     ".gitconfig"
     ".clang-format"
+    ".bashrc"
+    ".bash_profile"
+    ".profile"
 )
 
 # XDG config tree: dotconfig/<app>/... → $XDG_CONFIG_HOME/<app>/...
 DOTCONFIG_DIR="dotconfig"
 XDG_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 
-# Shell login scripts: shell/* → ~/.config/bash/ (sourced from ~/.bashrc
-# via init; mkenv regenerates the machine-specific env file).
+# Shell login scripts: shell/* → ~/.config/bash/ (sourced from the
+# managed ~/.bashrc via init; mkenv regenerates the machine env file).
 SHELL_SRC_DIR="shell"
 BASH_CONFIG_DIR="$XDG_CONFIG_DIR/bash"
 
@@ -121,32 +124,6 @@ generate_shell_env() {
     bash "$mkenv"
 }
 
-# Make sure ~/.bashrc sources ~/.config/bash/init, migrating any legacy
-# ~/.bashrc.d/init reference to the new location.
-ensure_bashrc_init() {
-    [ -f "$HOME/.bashrc" ] || return 0
-
-    if grep -q '\.bashrc\.d/init' "$HOME/.bashrc"; then
-        echo "Migrating ~/.bashrc.d/init reference to ~/.config/bash/init in ~/.bashrc"
-        local tmp
-        tmp="$(mktemp)"
-        sed 's|\.bashrc\.d/init|.config/bash/init|g' "$HOME/.bashrc" >"$tmp"
-        cat "$tmp" >"$HOME/.bashrc"
-        rm -f "$tmp"
-    fi
-
-    if ! grep -q '\.config/bash/init' "$HOME/.bashrc"; then
-        echo "Appending ~/.config/bash/init sourcing to ~/.bashrc"
-        cat >>"$HOME/.bashrc" <<'EOF'
-
-# My bash configuration
-if [ -f ~/.config/bash/init ]; then
-    . ~/.config/bash/init
-fi
-EOF
-    fi
-}
-
 # Wire up the machine-local Git config. Modern Git includes it by
 # reference; older Git inlines it (so does --append-gitlocal).
 configure_git_local() {
@@ -174,7 +151,6 @@ main() {
     install_dotfiles
     install_config
     generate_shell_env
-    ensure_bashrc_init
     configure_git_local
     echo "Dotfiles installation complete!"
 }
