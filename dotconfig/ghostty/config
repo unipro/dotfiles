@@ -1,0 +1,41 @@
+# ~/.config/ghostty/config
+
+# ─── Font ────────────────────────────────────────────────
+font-family = "JetBrains Mono"
+# Non-ASCII / symbol fallback (searched when a codepoint is
+# missing in the primary font)
+font-family = "Symbols Nerd Font Mono"
+font-size   = 15
+
+# Map Nerd Font icon codepoints explicitly to Symbols Nerd Font Mono
+# (also helps avoid mismatched/shrunken gutter icons)
+font-codepoint-map = U+E000-U+E00A,U+EA60-U+EBEB,U+E0A0-U+E0C8,U+E0CA,U+E0CC-U+E0D7,U+E200-U+E2A9,U+E300-U+E3E3,U+E5FA-U+E6B1,U+E700-U+E7C5,U+ED00-U+EFC1,U+F000-U+F2FF,U+F300-U+F372,U+F400-U+F533,U+F0001-U+F1AF0=Symbols Nerd Font Mono
+
+# ─── Theme ───────────────────────────────────────────────
+theme = iTerm2 Solarized Light
+
+# ─── Emacs tuning ────────────────────────────────────────
+# Treat Option as Meta (Alt). Using `left` keeps the right Option
+# free for special characters (–, …, | etc.).
+# Switch to `true` if you want both Options to act as Meta.
+macos-option-as-alt = left
+
+# ─── Window ──────────────────────────────────────────────
+# Initial size in cells (columns x rows)
+window-width  = 120
+window-height = 50
+
+# ─── Cursor ─────────────────────────────────────
+cursor-style               = block
+# Keep it a solid block even when the window loses focus
+# (default hollows it out to an outline)
+cursor-style-blink         = false
+shell-integration-features = no-cursor
+
+# ─── Quality of life ─────────────────────────────────────
+mouse-hide-while-typing    = true
+copy-on-select             = clipboard
+window-padding-x           = 4
+window-padding-y           = 4
+scrollback-limit           = 10000
+confirm-close-surface      = false

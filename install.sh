@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# install.sh — link/copy this repo's dotfiles into $HOME.
+# install.sh — copy this repo's dotfiles into $HOME and ~/.config.
 #
 set -eu
 
@@ -10,6 +10,10 @@ DOTFILES=(
     ".gitconfig"
     ".clang-format"
 )
+
+# XDG config tree: dotconfig/<app>/... → $XDG_CONFIG_HOME/<app>/...
+DOTCONFIG_DIR="dotconfig"
+XDG_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 # Git gained `includeIf "exists:..."` in 2.43.0. On older Git we
 # inline .gitconfig.local instead of including it by reference.
@@ -71,6 +75,25 @@ install_dotfiles() {
     done
 }
 
+# Mirror the dotconfig/ tree into $XDG_CONFIG_DIR (~/.config by
+# default), preserving any existing file as <file>.backup. An existing
+# backup is never overwritten, so re-running keeps the original safe.
+install_dotconfig() {
+    [ -d "$DOTCONFIG_DIR" ] || return 0
+    local src rel dest
+    while IFS= read -r src; do
+        rel="${src#"$DOTCONFIG_DIR"/}"
+        dest="$XDG_CONFIG_DIR/$rel"
+        if [ -f "$dest" ] && [ ! -f "$dest.backup" ]; then
+            echo "Backing up existing .config/$rel to .config/$rel.backup"
+            mv "$dest" "$dest.backup"
+        fi
+        mkdir -p "$(dirname "$dest")"
+        echo "Copying $rel to $XDG_CONFIG_DIR"
+        cp "$src" "$dest"
+    done < <(find "$DOTCONFIG_DIR" -type f)
+}
+
 # Make sure ~/.bashrc sources ~/.bashrc.d/init, and point the user at
 # the repo if that init script isn't present yet.
 ensure_bashrc_init() {
@@ -118,6 +141,7 @@ configure_git_local() {
 main() {
     parse_args "$@"
     install_dotfiles
+    install_dotconfig
     ensure_bashrc_init
     configure_git_local
     echo "Dotfiles installation complete!"
