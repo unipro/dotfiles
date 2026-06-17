@@ -25,23 +25,11 @@ XDG_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 MKENV_SRC="mkenv"
 BASH_CONFIG_DIR="$XDG_CONFIG_DIR/bash"
 
-# Git gained `includeIf "exists:..."` in 2.43.0. On older Git we
-# inline .gitconfig.local instead of including it by reference.
-REQUIRED_GIT_VERSION="2.43.0"
-
-APPEND_GITLOCAL=0
-
 # ─── Helpers ─────────────────────────────────────────────
 usage() {
     cat >&2 <<'EOF'
-Usage: install.sh [--append-gitlocal]
-  --append-gitlocal, -a   : appending .gitconfig.local to the end of .gitconfig
+Usage: install.sh
 EOF
-}
-
-# version_lt A B → true when version A is strictly older than B.
-version_lt() {
-    [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ] && [ "$1" != "$2" ]
 }
 
 # Display a path with $HOME collapsed to ~ for tidier messages.
@@ -60,9 +48,6 @@ parse_args() {
             -h|--help)
                 usage
                 exit 0
-                ;;
-            -a|--append-gitlocal)
-                APPEND_GITLOCAL=1
                 ;;
             --)
                 shift
@@ -136,12 +121,9 @@ generate_shell_env() {
     bash "$mkenv"
 }
 
-# Wire up the machine-local Git config. Modern Git includes it by
-# reference; older Git inlines it (so does --append-gitlocal).
+# Wire up the machine-local Git config by inlining .gitconfig.local
+# into the end of .gitconfig.
 configure_git_local() {
-    local git_version
-    git_version=$(git --version | awk '{print $3}')
-
     if [ ! -f "$HOME/.gitconfig.local" ]; then
         echo "Creating an empty .gitconfig.local for system-specific settings"
         touch "$HOME/.gitconfig.local"
@@ -149,13 +131,7 @@ configure_git_local() {
 
     printf '\n#\n# An additional Git configuration file on the local machine.\n#\n' \
         >>"$HOME/.gitconfig"
-
-    if [ "$APPEND_GITLOCAL" -eq 1 ] || version_lt "$git_version" "$REQUIRED_GIT_VERSION"; then
-        cat "$HOME/.gitconfig.local" >>"$HOME/.gitconfig"
-    else
-        printf '[includeIf "exists:~/.gitconfig.local"]\n\tpath = ~/.gitconfig.local\n' \
-            >>"$HOME/.gitconfig"
-    fi
+    cat "$HOME/.gitconfig.local" >>"$HOME/.gitconfig"
 }
 
 main() {
