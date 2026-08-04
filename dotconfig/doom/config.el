@@ -316,7 +316,38 @@
 ;; eglot
 (after! eglot
   (setq-default eglot-inlay-hints-mode nil)
-  (add-hook 'eglot-managed-mode-hook (lambda () (eglot-inlay-hints-mode -1))))
+  (add-hook 'eglot-managed-mode-hook (lambda () (eglot-inlay-hints-mode -1)))
+
+  ;; Doom's `+lsp-optimization-mode' resets `read-process-output-max' to 1MB
+  ;; whenever eglot attaches, silently undoing the 4MB set at the top of this
+  ;; file -- so the larger buffer never applied while a server was actually
+  ;; running. Doom adds its hook at the front, so re-applying with `:append'
+  ;; lands after it. It restores the saved 4MB on shutdown, so nothing drifts.
+  (add-hook! 'eglot-managed-mode-hook :append
+    (defun +lsp/restore-read-process-output-max-h ()
+      (setq-default read-process-output-max (* 4 1024 1024))))
+
+  ;; rust-analyzer tuning for large workspaces. `targetDir' gives it its own
+  ;; target subdirectory so its cargo check / build-script / proc-macro builds
+  ;; don't lock Cargo.lock against a manual `cargo build' (costs duplicated
+  ;; artifacts); the other two stop it from checking the whole workspace and
+  ;; every test/bench/example target on save.
+  ;;
+  ;; Booleans travel through `jsonrpc--json-encode', where false is
+  ;; `:json-false' -- not `:false', and nil would mean null.
+  ;;
+  ;; NOTE eglot reads this from a temp buffer with only dir-locals applied, so a
+  ;; value set in a mode hook is never seen: it has to be the global default
+  ;; here, or come from a project's .dir-locals.el (which is the right place for
+  ;; per-crate features and exclude lists). Servers other than rust-analyzer
+  ;; ignore the section. `M-x eglot-show-workspace-configuration' dumps what is
+  ;; actually sent.
+  (setq-default eglot-workspace-configuration
+                '(:rust-analyzer
+                  (:cargo (:targetDir t
+                           :allTargets :json-false)
+                   :check (:workspace :json-false)
+                   :lru (:capacity 256)))))
 
 ;; dotenv-mode
 (add-to-list 'auto-mode-alist '("\\.env\\..*\\'" . dotenv-mode))
