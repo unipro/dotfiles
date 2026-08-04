@@ -413,7 +413,15 @@
 ;; Show the modeline in vterm buffer
 (remove-hook 'vterm-mode-hook  #'hide-mode-line-mode)
 (after! vterm
-  (set-popup-rule! "^\\*vterm" :size 0.25 :vslot -4 :select t :quit nil :ttl 0 :modeline t))
+  (set-popup-rule! "^\\*vterm" :size 0.25 :vslot -4 :select t :quit nil :ttl 0 :modeline t)
+
+  ;; Claude Code redraws in place and scrolls a lot of transcript past the
+  ;; top of the window; Doom's 5000 lines runs out quickly. 100000 is the
+  ;; ceiling the vterm module is compiled with (SB_MAX in vterm-module.h).
+  ;; Read the history with `vterm-copy-mode' (C-c C-t) -- it turns the
+  ;; buffer into an ordinary read-only buffer, so normal motion, C-s and
+  ;; yanking all work; C-c C-t or RET leaves it again.
+  (setq vterm-max-scrollback 100000))
 
 ;; auto-customisations
 (setq-default custom-file (expand-file-name "custom.el" doom-user-dir))
