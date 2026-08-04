@@ -11,13 +11,10 @@
 ;; dotenv
 (package! dotenv-mode)
 
-;; magit-todos
-(when (string-equal emacs-version "29.1")
-  (package! magit-todos
-    :recipe (:host github :repo "unipro/magit-todos" :branch "wip/obsolete_buffer-local-value")
-    :pin "c24518ef461393e1d4e43f15b7c3d528cb0c89bf"))
-
-;; web-server
+;; Hard dependency of claude-code-ide's MCP tools server
+;; (claude-code-ide-mcp-http-server.el requires it at runtime, and
+;; `claude-code-ide-mcp-server' errors out without it). Declared
+;; explicitly rather than leaning on straight's transitive resolution.
 (package! web-server)
 
 ;; copilot

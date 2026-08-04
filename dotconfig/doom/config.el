@@ -17,7 +17,6 @@
 (setq-default window-combination-resize t ; Take new window space from all other windows
               x-stretch-cursor t)         ; Stretch cursor to the glyph width
 (setq undo-limit 80000000                 ; Raise undo-limit to 80Mb
-      evil-want-fine-undo t               ; By default while in insert all changes are one big blob. Be more granular
       auto-save-default t                 ; Nobody likes to loose work, I certainly don't
       truncate-string-ellipsis "…"        ; Unicode ellispis are nicer than "...", and also save /precious/ space
       password-cache-expiry nil           ; I can trust my computers ... can't I?
@@ -42,22 +41,6 @@
 ;; Default buffer mode
 ;; (setq-default major-mode 'org-mode)
 
-(defvar +default-want-RET-continue-comments t
-  "If non-nil, RET will continue commented lines.")
-
-(defvar +default-minibuffer-maps
-  (append '(minibuffer-local-map
-            minibuffer-local-ns-map
-            minibuffer-local-completion-map
-            minibuffer-local-must-match-map
-            minibuffer-local-isearch-map
-            read-expression-map)
-          (cond ((modulep! :completion ivy)
-                 '(ivy-minibuffer-map ivy-switch-buffer-map))
-                ((modulep! :completion helm)
-                 '(helm-map helm-rg-map helm-read-file-map))))
-  "A list of all the keymaps used for the minibuffer.")
-
 ;; OS specific fixes
 (when (featurep :system 'macos)
   ;; Fix MacOS shift+tab
@@ -78,14 +61,14 @@
         "s-l" #'goto-line
         ;; Restore OS undo, save, copy, & paste keys (without cua-mode, because
         ;; it imposes some other functionality and overhead we don't need)
-        "s-f" (if (modulep! :completion vertico) #'consult-line #'swiper)
+        "s-f" #'consult-line
         "s-z" #'undo
         "s-Z" #'redo
-        "s-c" (if (featurep 'evil) #'evil-yank #'copy-region-as-kill)
+        "s-c" #'copy-region-as-kill
         "s-v" #'yank
         "s-s" #'save-buffer
-        "s-x" #'execute-extended-command
-        :v "s-x" #'kill-region
+        "s-x" (cmds! (doom-region-active-p) #'kill-region
+                     #'execute-extended-command)
         ;; Buffer-local font scaling
         "s-+" #'doom/reset-font-size
         "s-=" #'doom/increase-font-size
@@ -93,14 +76,12 @@
         ;; Conventional text-editing keys & motions
         "s-a" #'mark-whole-buffer
         "s-/" (cmd! (save-excursion (comment-line 1)))
-        :n "s-/" #'evilnc-comment-or-uncomment-lines
-        :v "s-/" #'evilnc-comment-operator
-        :gi  [s-backspace] #'doom/backward-kill-to-bol-and-indent
-        :gi  [s-left]      #'doom/backward-to-bol-or-indent
-        :gi  [s-right]     #'doom/forward-to-last-non-comment-or-eol
-        :gi  [M-backspace] #'backward-kill-word
-        :gi  [M-left]      #'backward-word
-        :gi  [M-right]     #'forward-word))
+        [s-backspace] #'doom/backward-kill-to-bol-and-indent
+        [s-left]      #'doom/backward-to-bol-or-indent
+        [s-right]     #'doom/forward-to-last-non-comment-or-eol
+        [M-backspace] #'backward-kill-word
+        [M-left]      #'backward-word
+        [M-right]     #'forward-word))
 
 ;; Changing the leader prefixes
 ;; (setq doom-leader-alt-key "M-m"
@@ -332,10 +313,6 @@
                                     :test-prefix "test_"
                                     :test-suffix "_test"))
 
-;; unset the backends for a sh mode
-(after! sh-script
-  (set-company-backend! 'sh-mode nil))
-
 ;; eglot
 (after! eglot
   (setq-default eglot-inlay-hints-mode nil)
@@ -348,12 +325,6 @@
 (when (featurep :system 'macos)
   (after! flycheck
     (setq-default flycheck-disabled-checkers '(proselint))))
-
-;; gptel
-(use-package! gptel
-  :config
-  ;; TODO
-  )
 
 ;; copilot-chat
 ;; (use-package! copilot-chat
