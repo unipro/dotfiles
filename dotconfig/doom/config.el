@@ -10,8 +10,8 @@
       user-mail-address "unipro.kr@gmail.com")
 
 ;; performance tuning
-(setq gc-cons-threshold 100000000               ; 100mb
-      read-process-output-max (* 1024 1024))    ; 1mb
+(setq gcmh-high-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 4 1024 1024))  ; for rust-analyzer
 
 ;; basic settings
 (setq-default window-combination-resize t ; Take new window space from all other windows
@@ -263,32 +263,15 @@
 (after! (treemacs projectile)
   (treemacs-project-follow-mode 1))
 
-(when (and (>= emacs-major-version 29)
-        (fboundp 'treesit-available-p)
-        (treesit-available-p))
-  ;; Automatically remap major modes to Tree-sitter versions
-  (setq major-mode-remap-alist
-    '((c-mode          . c-ts-mode)
-      (c++-mode        . c++-ts-mode)
-      (python-mode     . python-ts-mode)
-      (rust-mode       . rust-ts-mode)
-      (go-mode         . go-ts-mode)
-      (java-mode       . java-ts-mode)
-      (js-mode         . js-ts-mode)
-      (javascript-mode . js-ts-mode)))
-
-  ;; Global indentation settings
-  (setq-default indent-tabs-mode nil)  ;; Always use spaces, not tabs
-  (setq-default tab-width 4)           ;; Tab width is 4 spaces
-
-  ;; Language-specific Tree-sitter indent settings
-  (setq-default c-ts-mode-indent-offset 4)
-  (setq-default c++-ts-mode-indent-offset 4)
-  (setq-default python-ts-mode-indent-offset 4)
-  (setq-default rust-ts-mode-indent-offset 4)
-  (setq-default go-ts-mode-indent-offset 4)
-  (setq-default java-ts-mode-indent-offset 4)
-  (setq-default js-ts-mode-indent-offset 4))
+;; tree-sitter
+;; Major-mode remapping and grammar recipes come from `:tools tree-sitter' plus
+;; the per-language `+tree-sitter' flags in init.el -- don't duplicate them here.
+;; A manual `major-mode-remap-alist' outranks Doom's `major-mode-remap-defaults'
+;; and loses grammar auto-install, mode-hook inheritance, and the
+;; missing-grammar fallback. Use `set-tree-sitter!' for languages Doom misses.
+;; Only override the indent offsets whose upstream default isn't 4.
+(setq-default c-ts-mode-indent-offset 4    ; default 2; covers c++-ts-mode too
+              go-ts-mode-indent-offset 4)  ; default 8
 
 ;; exec-path-from-shell
 (use-package! exec-path-from-shell
