@@ -382,8 +382,11 @@
   :config
   (claude-code-ide-emacs-tools-setup))
 
+;; Doom owns `SPC '' (vertico-repeat, "Resume last search"), so the AI menu
+;; lives on `SPC l' instead — free unless :tools collab is enabled, which
+;; claims it for "live share/collab".
 (map! :leader
-  (:prefix-map ("'" . "AI")
+  (:prefix-map ("l" . "AI/LLM")
     ;; claude-code-ide
     :desc "Claude Code"             "c" #'claude-code-ide
     :desc "Menu (Claude Code)"      "m" #'claude-code-ide-menu
