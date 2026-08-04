@@ -19,10 +19,13 @@ cd ~/dotfiles
 ./install.sh
 #+end_src
 
-=install.sh= *copies* the managed files into =$HOME= and =~/.config=
-(it does not create symlinks). Any existing target is moved aside to
-=<file>.backup= first, and a pre-existing =.backup= is never
+=install.sh= *copies* the managed files into =$HOME=, =~/.config= and
+=~/.claude= (it does not create symlinks). Any existing target is moved
+aside to =<file>.backup= first, and a pre-existing =.backup= is never
 overwritten — so your original files stay safe and re-running is idempotent.
+
+The =claude= component is the one exception: it syncs *both ways* rather
+than only repo → home. See [[#claude-code][Claude Code]] below.
 
 *** Installing a subset
 With no arguments =install.sh= installs everything. To replace only part
@@ -42,6 +45,7 @@ of the configuration, name the components you want:
 | =clang-format= | =~/.clang-format=                                                           |
 | =doom=         | =~/.config/doom/=                                                           |
 | =ghostty=      | =~/.config/ghostty/=                                                        |
+| =claude=       | =~/.claude/CLAUDE.md= (two-way sync, newest side wins)                       |
 
 Unknown component names are rejected before anything is copied, and the
 components always run in the order listed above regardless of argument
@@ -138,6 +142,43 @@ installed to =~/.config/doom/= by =install.sh=.
 Machine-local overrides go in =~/.config/doom/local.el= (and
 =custom.el=); both are git-ignored and never committed. After changing
 =init.el= or =packages.el=, run =doom sync=.
+
+** Claude Code
+:PROPERTIES:
+:CUSTOM_ID: claude-code
+:END:
+[[https://claude.com/claude-code][Claude Code]] keeps its user-level configuration in =~/.claude= rather
+than the XDG tree, so it gets its own source directory =dotclaude/=
+instead of living under =dotconfig/=:
+
+- =CLAUDE.md= : global instructions loaded into every session on this
+  machine
+
+Everything else in =~/.claude= is runtime state that Claude Code
+generates and owns (=sessions/=, =projects/=, =history.jsonl=, caches,
+=settings.json=). =install.sh= only looks at the files present in
+=dotclaude/=, so that state is never read, written, or pulled into the
+repository. To manage another file, add it to =dotclaude/= and it is
+picked up automatically.
+
+*** Two-way sync
+The global rules get edited from inside a Claude Code session about as
+often as they get edited in the repository, so =./install.sh claude=
+syncs rather than overwrites — for each file in =dotclaude/=:
+
+1. contents identical → nothing happens
+2. =~/.claude= copy is newer → it is copied *into the repository*
+3. =dotclaude/= copy is newer → it is installed to =~/.claude= (with the
+   usual =<file>.backup=)
+
+#+begin_src sh
+./install.sh claude       # reconcile both sides, newest wins
+git diff dotclaude/       # review whatever got pulled in
+#+end_src
+
+One caveat: Git restamps the files it checks out, so a file touched by
+=git pull= looks newer than an older local edit and wins. Run
+=./install.sh claude= *before* pulling to capture local edits first.
 
 ** License
 Feel free to use and modify these files as needed.

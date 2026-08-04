@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# install.sh — copy this repo's dotfiles into $HOME and ~/.config.
+# install.sh — copy this repo's dotfiles into $HOME, ~/.config and ~/.claude.
 #
 # With no arguments every component is installed. Pass component names to
 # install only those, e.g. `install.sh bash doom`. Run with --list to see
@@ -21,11 +21,19 @@ COMPONENTS=(
     clang-format
     doom
     ghostty
+    claude
 )
 
 # XDG config tree: dotconfig/<app>/... → $XDG_CONFIG_HOME/<app>/...
 DOTCONFIG_DIR="dotconfig"
 XDG_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+# Claude Code keeps its config in ~/.claude, not the XDG tree, so it gets
+# its own source directory. Only the hand-written files listed under
+# dotclaude/ are managed; the runtime state Claude Code writes alongside
+# them (sessions, history, caches) is never touched.
+DOTCLAUDE_DIR="dotclaude"
+CLAUDE_DIR="$HOME/.claude"
 
 # The bash config (dotconfig/bash/{init,aliases,completion}) is sourced
 # from the managed ~/.bashrc via init. The mkenv generator is installed
@@ -41,8 +49,9 @@ usage() {
     cat >&2 <<'EOF'
 Usage: install.sh [-h] [-l] [COMPONENT...]
 
-Copy this repo's dotfiles into $HOME and ~/.config. With no COMPONENT
-given, every component is installed; `all` is an explicit alias for that.
+Copy this repo's dotfiles into $HOME, ~/.config and ~/.claude. With no
+COMPONENT given, every component is installed; `all` is an explicit alias
+for that.
 
 Options:
   -l, --list    List the installable components and exit
@@ -52,6 +61,7 @@ Examples:
   ./install.sh              # install everything
   ./install.sh bash git     # only the shell and Git configs
   ./install.sh doom         # only ~/.config/doom
+  ./install.sh claude       # only ~/.claude/CLAUDE.md
 EOF
 }
 
@@ -65,6 +75,7 @@ describe_component() {
         clang-format) echo '~/.clang-format' ;;
         doom)         echo '~/.config/doom/ (Doom Emacs)' ;;
         ghostty)      echo '~/.config/ghostty/' ;;
+        claude)       echo '~/.claude/CLAUDE.md (two-way sync, newest wins)' ;;
     esac
 }
 
@@ -181,6 +192,44 @@ copy_tree() {
     done < <(find "$src_dir" -type f)
 }
 
+# Sync one file between the repo and its installed copy: newest wins.
+# Identical contents are left alone; otherwise the side with the more
+# recent mtime overwrites the other. Copying the repo's version out goes
+# through copy_file, so the local file is still backed up first.
+#
+# Caveat: git restamps files it checks out, so a file touched by `git
+# pull` looks newer than an older local edit. Commit local changes (run
+# this script first to pull them in) before pulling.
+sync_file() {
+    local repo="$1" installed="$2"
+
+    if [ ! -f "$installed" ] || [ ! -f "$repo" ]; then
+        copy_file "$repo" "$installed"
+        return 0
+    fi
+
+    if cmp -s "$repo" "$installed"; then
+        echo "Already in sync: $(tilde "$installed")"
+    elif [ "$installed" -nt "$repo" ]; then
+        echo "Copying newer $(tilde "$installed") into $repo"
+        cp "$installed" "$repo"
+    else
+        copy_file "$repo" "$installed"
+    fi
+}
+
+# Sync every file under src_dir with its counterpart in dest_dir. Only
+# files present in the repo are considered, so unrelated files in
+# dest_dir are ignored rather than pulled into the repo.
+sync_tree() {
+    local src_dir="$1" dest_dir="$2"
+    [ -d "$src_dir" ] || return 0
+    local src
+    while IFS= read -r src; do
+        sync_file "$src" "$dest_dir/${src#"$src_dir"/}"
+    done < <(find "$src_dir" -type f)
+}
+
 # ─── Components ──────────────────────────────────────────
 # Shell startup files, the XDG bash config, the mkenv generator, and the
 # machine-specific env files (~/.config/bash/env and ~/.config/zsh/env)
@@ -225,6 +274,14 @@ install_doom() {
 
 install_ghostty() {
     copy_tree "$DOTCONFIG_DIR/ghostty" "$XDG_CONFIG_DIR/ghostty"
+}
+
+# Claude Code's global rules (~/.claude/CLAUDE.md). This is the one
+# component that syncs both ways: the rules are edited in place from a
+# session about as often as they are edited in the repo, so the newer
+# side wins instead of the repo always overwriting the installed copy.
+install_claude() {
+    sync_tree "$DOTCLAUDE_DIR" "$CLAUDE_DIR"
 }
 
 main() {
