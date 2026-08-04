@@ -376,22 +376,11 @@
 ;;           ("C-n" . 'copilot-next-completion)
 ;;           ("C-p" . 'copilot-previous-completion)))
 
-;; org-ai
-(use-package! org-ai
-  :hook (org-mode . org-ai-mode)
-  :config
-  ;; TODO
-  )
-
 ;; claude-code
 (use-package! claude-code-ide
   :commands (claude-code-ide claude-code-ide-menu)
   :config
   (claude-code-ide-emacs-tools-setup))
-
-;; mcp
-(use-package! mcp
-  :after gptel)
 
 (map! :leader
   (:prefix-map ("'" . "AI")
