@@ -24,6 +24,29 @@ cd ~/dotfiles
 =<file>.backup= first, and a pre-existing =.backup= is never
 overwritten — so your original files stay safe and re-running is idempotent.
 
+*** Installing a subset
+With no arguments =install.sh= installs everything. To replace only part
+of the configuration, name the components you want:
+
+#+begin_src sh
+./install.sh --list       # show the available components
+./install.sh doom         # only ~/.config/doom
+./install.sh bash git     # only the shell and Git configs
+./install.sh all          # explicit alias for "everything"
+#+end_src
+
+| Component      | Installs                                                                    |
+|----------------+-----------------------------------------------------------------------------|
+| =bash=         | =~/.bashrc=, =~/.bash_profile=, =~/.profile=, =~/.config/bash/= + =mkenv=, and the generated shell env |
+| =git=          | =~/.gitconfig=, with =~/.gitconfig.local= inlined                           |
+| =clang-format= | =~/.clang-format=                                                           |
+| =doom=         | =~/.config/doom/=                                                           |
+| =ghostty=      | =~/.config/ghostty/=                                                        |
+
+Unknown component names are rejected before anything is copied, and the
+components always run in the order listed above regardless of argument
+order.
+
 ** Managing Updates
 Pull the latest changes and re-run the install script to propagate
 them (since files are copied, not symlinked, a =git pull= alone does
@@ -34,6 +57,9 @@ cd ~/dotfiles
 git pull origin main
 ./install.sh
 #+end_src
+
+If you only changed one area, re-install just that component — e.g.
+=./install.sh doom= after editing =dotconfig/doom/config.el=.
 
 To contribute your own changes back, edit the files in the repository,
 then commit and push:
