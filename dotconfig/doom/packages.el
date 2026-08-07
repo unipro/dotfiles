@@ -17,12 +17,6 @@
 ;; explicitly rather than leaning on straight's transitive resolution.
 (package! web-server)
 
-;; copilot
-;; (package! copilot-chat
-;;   :recipe (:host github :repo "chep/copilot-chat.el" :files ("*.el")))
-;; (package! copilot
-;;   :recipe (:host github :repo "copilot-emacs/copilot.el" :files ("*.el")))
-
 ;; Claude Code IDE (keep existing — runs inside eat terminal)
 ;; (package! claude-code
 ;;   :recipe (:host github :repo "stevemolitor/claude-code.el"))
