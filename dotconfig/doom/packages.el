@@ -31,12 +31,6 @@
 ;; first Claude session) asks before downloading it.
 (package! ghostel)
 
-;; Show the Vertico completion list in a child frame so the minibuffer
-;; never grows. Doom's `vertico-count' is 17, and every 17-line minibuffer
-;; shrinks the full-height claude-code-ide side window, which corrupts the
-;; vterm render (see the vertico-posframe block in config.el).
-(package! vertico-posframe)
-
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;; (package! some-package)
 

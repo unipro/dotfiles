@@ -181,22 +181,6 @@
 (setq default-input-method "korean-hangul")
 (global-set-key (kbd "S-SPC") 'toggle-input-method)
 
-;; vertico
-;; Doom sets `vertico-count' to 17 with `vertico-resize' nil, so every
-;; minibuffer prompt grows the echo area to a fixed 17 lines. That shrinks
-;; every full-height window -- including the claude-code-ide side window --
-;; and `claude-code-ide-prevent-reflow-glitch' deliberately withholds the
-;; SIGWINCH on height-only changes, so Claude keeps drawing at the old row
-;; count and the terminal render tears. Putting the candidate list in a child
-;; frame keeps the minibuffer one line tall and avoids the resize entirely.
-;; Child frames are graphical-only: on a tty `vertico-posframe-mode-workable-p'
-;; is nil, its `vertico--display-candidates' method doesn't apply, and vertico
-;; renders in the minibuffer as usual -- so terminal frames are unaffected.
-(use-package! vertico-posframe
-  :after vertico
-  :config
-  (vertico-posframe-mode 1))
-
 ;; avy
 (setq avy-all-windows nil
       avy-all-windows-alt t
