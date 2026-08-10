@@ -187,7 +187,7 @@
 ;; every full-height window -- including the claude-code-ide side window --
 ;; and `claude-code-ide-prevent-reflow-glitch' deliberately withholds the
 ;; SIGWINCH on height-only changes, so Claude keeps drawing at the old row
-;; count and the vterm render tears. Putting the candidate list in a child
+;; count and the terminal render tears. Putting the candidate list in a child
 ;; frame keeps the minibuffer one line tall and avoids the resize entirely.
 ;; Child frames are graphical-only: on a tty `vertico-posframe-mode-workable-p'
 ;; is nil, its `vertico--display-candidates' method doesn't apply, and vertico
@@ -357,9 +357,24 @@
   (after! flycheck
     (setq-default flycheck-disabled-checkers '(proselint))))
 
+;; ghostel -- terminal backend for claude-code-ide (see packages.el).
+;; `ghostel-ime' is needed because `default-input-method' here is
+;; korean-hangul: Quail-based input methods compose in the Emacs buffer,
+;; which a terminal buffer owns, so without it Hangul can't be typed into
+;; the Claude session.
+(use-package! ghostel-ime
+  :hook (ghostel-mode . ghostel-ime-mode))
+
 ;; claude-code
 (use-package! claude-code-ide
   :commands (claude-code-ide claude-code-ide-menu)
+  :custom
+  ;; vterm (the default) and eat both tear while Claude repaints its TUI;
+  ;; ghostel renders it cleanly. Leaving `claude-code-ide-no-flicker' at nil
+  ;; on purpose -- it forces the fullscreen renderer as a vterm/eat flicker
+  ;; workaround, and with ghostel the inline renderer keeps the transcript in
+  ;; the buffer where scrolling and isearch work.
+  (claude-code-ide-terminal-backend 'ghostel)
   :config
   (claude-code-ide-emacs-tools-setup))
 

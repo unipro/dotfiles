@@ -17,11 +17,19 @@
 ;; explicitly rather than leaning on straight's transitive resolution.
 (package! web-server)
 
-;; Claude Code IDE (keep existing — runs inside eat terminal)
+;; Claude Code IDE (runs inside a ghostel terminal, see config.el)
 ;; (package! claude-code
 ;;   :recipe (:host github :repo "stevemolitor/claude-code.el"))
 (package! claude-code-ide
   :recipe (:host github :repo "manzaltu/claude-code-ide.el"))
+
+;; Terminal backend for claude-code-ide. Ghostel drives libghostty-vt (the
+;; VT engine behind Ghostty) through a native module, so it avoids the
+;; flicker and reflow artifacts vterm and eat show while Claude redraws its
+;; TUI. The module is a pre-built binary fetched from GitHub releases on
+;; first use -- no zig toolchain needed, but the first `M-x ghostel' (or
+;; first Claude session) asks before downloading it.
+(package! ghostel)
 
 ;; Show the Vertico completion list in a child frame so the minibuffer
 ;; never grows. Doom's `vertico-count' is 17, and every 17-line minibuffer
