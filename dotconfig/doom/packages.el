@@ -26,10 +26,12 @@
 ;; Terminal backend for claude-code-ide. Ghostel drives libghostty-vt (the
 ;; VT engine behind Ghostty) through a native module, so it avoids the
 ;; flicker and reflow artifacts vterm and eat show while Claude redraws its
-;; TUI. The module is a pre-built binary fetched from GitHub releases on
-;; first use -- no zig toolchain needed, but the first `M-x ghostel' (or
+;; TUI. The native module is a pre-built binary fetched from GitHub releases
+;; on first use -- no zig toolchain needed, but the first `M-x ghostel' (or
 ;; first Claude session) asks before downloading it.
-(package! ghostel)
+;;
+;; No `package!' here on purpose: the :term ghostel module in init.el declares
+;; it with its own pin, and a bare redeclaration only obscures who owns that.
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;; (package! some-package)

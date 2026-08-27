@@ -341,13 +341,36 @@
   (after! flycheck
     (setq-default flycheck-disabled-checkers '(proselint))))
 
-;; ghostel -- terminal backend for claude-code-ide (see packages.el).
+;; ghostel -- terminal backend for claude-code-ide, enabled as the :term
+;; ghostel module in init.el (it owns the package and its pin).
 ;; `ghostel-ime' is needed because `default-input-method' here is
 ;; korean-hangul: Quail-based input methods compose in the Emacs buffer,
 ;; which a terminal buffer owns, so without it Hangul can't be typed into
 ;; the Claude session.
 (use-package! ghostel-ime
   :hook (ghostel-mode . ghostel-ime-mode))
+
+;; The :term ghostel module hides the modeline in terminal buffers. Undo that
+;; -- the old vterm setup showed it, and the popup rule below relies on it.
+(remove-hook 'ghostel-mode-hook #'mode-line-invisible-mode)
+
+(after! ghostel
+  ;; `ghostel-buffer-name-function' is forced to nil by the module when
+  ;; :ui workspaces is on (persp-mode tracks buffers by name), so the buffer
+  ;; stays "*ghostel*" and this rule keeps matching.
+  (set-popup-rule! "^\\*ghostel" :size 0.25 :vslot -4 :select t :quit nil :ttl 0 :modeline t)
+
+  ;; Claude Code redraws in place and scrolls a lot of transcript past the top
+  ;; of the window; the 5MB default (~5,000 rows at 80 columns, fewer when
+  ;; wider) runs out quickly. Unlike `vterm-max-scrollback' this is a byte
+  ;; budget, not a row count, and the whole thing is materialized into the
+  ;; Emacs buffer -- so raising it costs heap and slows sustained
+  ;; high-throughput output. 32MB is the compromise; drop it if `cat' on a big
+  ;; file starts to crawl.
+  ;;
+  ;; History is plain buffer text here, so isearch, consult-line and normal
+  ;; motion work directly -- no `vterm-copy-mode' equivalent needed.
+  (setq ghostel-max-scrollback (* 32 1024 1024)))
 
 ;; claude-code
 (use-package! claude-code-ide
@@ -379,19 +402,6 @@
     ;; :desc "Menu (switch backend)"   "m" #'gptel-menu
     ;; :desc "Inline rewrite"          "r" #'gptel-rewrite
     ))
-
-;; Show the modeline in vterm buffer
-(remove-hook 'vterm-mode-hook  #'hide-mode-line-mode)
-(after! vterm
-  (set-popup-rule! "^\\*vterm" :size 0.25 :vslot -4 :select t :quit nil :ttl 0 :modeline t)
-
-  ;; Claude Code redraws in place and scrolls a lot of transcript past the
-  ;; top of the window; Doom's 5000 lines runs out quickly. 100000 is the
-  ;; ceiling the vterm module is compiled with (SB_MAX in vterm-module.h).
-  ;; Read the history with `vterm-copy-mode' (C-c C-t) -- it turns the
-  ;; buffer into an ordinary read-only buffer, so normal motion, C-s and
-  ;; yanking all work; C-c C-t or RET leaves it again.
-  (setq vterm-max-scrollback 100000))
 
 ;; auto-customisations
 (setq-default custom-file (expand-file-name "custom.el" doom-user-dir))
