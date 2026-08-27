@@ -133,8 +133,23 @@ if [ "${OSTYPE:0:6}" == "darwin" ]; then
         MY_XML_CATALOG_FILES="$BREW_PREFIX/etc/xml/catalog"
     fi
 
-    # Java
-    MY_JAVA_HOME="$(/usr/libexec/java_home)"
+    # Java. java_home always exists on macOS; it exits non-zero (and complains
+    # on stderr) when it can't find a JDK, so gate on the status and swallow the
+    # noise. An empty MY_JAVA_HOME skips the export below.
+    #
+    # Homebrew's openjdk is keg-only: it is neither linked into $BREW_PREFIX/bin
+    # nor registered in /Library/Java/JavaVirtualMachines, so java_home misses it
+    # and /usr/bin/java stays a dead stub. Fall back to the keg directly and put
+    # its bin on PATH. (`sudo ln -sfn "$BREW_PREFIX/opt/openjdk/libexec/openjdk.jdk" \
+    # /Library/Java/JavaVirtualMachines/openjdk.jdk' also fixes the system
+    # wrappers, and then java_home returns this same path -- but it needs root,
+    # so don't depend on it here.)
+    MY_JAVA_HOME="$(/usr/libexec/java_home 2>/dev/null)" || MY_JAVA_HOME=""
+    if [ -z "$MY_JAVA_HOME" ] && \
+           [ -x "$BREW_PREFIX/opt/openjdk/libexec/openjdk.jdk/Contents/Home/bin/java" ]; then
+        MY_JAVA_HOME="$BREW_PREFIX/opt/openjdk/libexec/openjdk.jdk/Contents/Home"
+    fi
+    add_bin_path "$BREW_PREFIX/opt/openjdk/bin"
 
     # mysql@8.4
     add_bin_path "$BREW_PREFIX/opt/mysql@8.4/bin"
@@ -217,11 +232,19 @@ if [ -d "${HOME}/.npm-packages" ]; then
     add_man_path "$NPM_PACKAGES/share/man"
 fi
 
+# pyenv & python. `pyenv init --path' does two things: export PYENV_ROOT and
+# prepend $PYENV_ROOT/shims to PATH. Eval'ing it here would only touch mkenv's
+# own process -- this script *generates* the env files -- so route both through
+# the accumulators that actually get written out. ~/.pyenv/bin is added without
+# a `command -v pyenv' guard so a git-install pyenv that isn't on PATH yet can
+# still bootstrap; add_bin_path already skips directories that don't exist.
+MY_PYENV_ROOT="${PYENV_ROOT:-${HOME}/.pyenv}"
+add_bin_path "${MY_PYENV_ROOT}/bin"
+add_bin_path "${MY_PYENV_ROOT}/shims"
+[ -d "$MY_PYENV_ROOT" ] || MY_PYENV_ROOT=""
+
 # php
 add_bin_path "${HOME}/.composer/vendor/bin"
-
-# python
-add_bin_path "${HOME}/.pyenv/bin"
 
 # emacs
 add_bin_path "$HOME/.emacs.d/bin"
@@ -237,11 +260,6 @@ fi
 # For GStreamer to find your own plugins, add their paths to `GST_PLUGIN_PATH`.
 if [ -d "$HOME/.local/lib/gstreamer-1.0" ];then
     MY_GST_PLUGIN_PATH="$HOME/.local/lib/gstreamer-1.0"
-fi
-
-# pyenv
-if command -v pyenv &> /dev/null; then
-    eval "$(pyenv init --path)"
 fi
 
 {
@@ -286,6 +304,10 @@ fi
 
     if [ -n "$MY_JAVA_HOME" ]; then
         echo "export JAVA_HOME=\"$MY_JAVA_HOME\""
+    fi
+
+    if [ -n "$MY_PYENV_ROOT" ]; then
+        echo "export PYENV_ROOT=\"$MY_PYENV_ROOT\""
     fi
 
     if [ -d "$HOME/perl5/lib/perl5" ]; then
@@ -358,6 +380,10 @@ mkdir -p "$HOME/.config/zsh"
 
     if [ -n "$MY_JAVA_HOME" ]; then
         echo "export JAVA_HOME=\"$MY_JAVA_HOME\""
+    fi
+
+    if [ -n "$MY_PYENV_ROOT" ]; then
+        echo "export PYENV_ROOT=\"$MY_PYENV_ROOT\""
     fi
 
     if [ -d "$HOME/perl5/lib/perl5" ]; then

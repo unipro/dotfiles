@@ -259,6 +259,11 @@
   :when (memq window-system '(mac ns))
   :config
   (setq exec-path-from-shell-arguments '("-l" "-i")) ; Login + Interactive shell
+  ;; Only PATH and MANPATH are copied by default. JAVA_HOME matters because
+  ;; Homebrew's openjdk is keg-only and never registers with the system Java
+  ;; wrappers, so eclipse.jdt.ls has no other way to find a JDK when Emacs is
+  ;; launched from Finder/Dock rather than a shell (mkenv exports it).
+  (add-to-list 'exec-path-from-shell-variables "JAVA_HOME")
   (exec-path-from-shell-initialize))
 
 ;; Resolve system build error in macOS Emacs when CC is set to gcc-xx
