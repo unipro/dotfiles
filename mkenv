@@ -336,9 +336,12 @@ fi
 mkdir -p "$HOME/.config/zsh"
 
 {
-    echo "export PATH=\"$MY_PATH:\$PATH\""
+    # No separator before $PATH: the accumulators already end in ':', and an
+    # extra one leaves an empty element -- which zsh reads as the current
+    # directory, putting CWD on PATH.
+    echo "export PATH=\"$MY_PATH\$PATH\""
     if [ -n "$MY_PKG_CONFIG_PATH" ]; then
-        echo "export PKG_CONFIG_PATH=\"$MY_PKG_CONFIG_PATH:\${PKG_CONFIG_PATH}\""
+        echo "export PKG_CONFIG_PATH=\"$MY_PKG_CONFIG_PATH\${PKG_CONFIG_PATH}\""
     fi
     if [ -n "$MY_MANPATH" ]; then
         echo "export MANPATH=\"$MY_MANPATH:\${MANPATH}\""
