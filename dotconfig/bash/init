@@ -21,26 +21,51 @@ export ALTERNATE_EDITOR=""
 export EDITOR="emacsclient -t"                  # $EDITOR opens in terminal
 export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode
 
-# enable programmable completion features
+# Programmable completion, in three layers. They are not alternatives, so
+# they run in sequence: the system bash-completion defines the helpers
+# (`_init_completion', `_filedir', ...) that individual completion scripts
+# call, ~/.bash_completion is its per-user hook, and ~/.config/bash/completion
+# loads this repo's own drop-in directory. These used to be one if/elif
+# chain, which ran whichever came first -- so on a machine that has
+# /etc/profile.d/bash_completion.sh, as most Linux distributions do, the
+# drop-ins never loaded at all.
 if ! shopt -oq posix; then
+    # 1. System bash-completion, however the platform ships it. macOS ships
+    #    none, so it has to come from Homebrew:
+    #
+    #        brew install bash-completion@2
+    #
+    #    The @2 series is the one for bash 4.1 and newer, which is what
+    #    Homebrew's bash is; the unversioned formula is the older 1.x series,
+    #    written for the bash 3.2 that macOS itself carries.
     if [ -f /etc/profile.d/bash_completion.sh ]; then
         # shellcheck source=/dev/null
         . /etc/profile.d/bash_completion.sh
-    elif [ -f "$HOME/.bash_completion" ]; then
+    elif [ "${OSTYPE:0:6}" == "darwin" ] && command -v brew >/dev/null 2>&1; then
+        bash_completion_sh="$(brew --prefix)/etc/profile.d/bash_completion.sh"
+        if [ -f "$bash_completion_sh" ]; then
+            # shellcheck source=/dev/null
+            . "$bash_completion_sh"
+        fi
+        unset bash_completion_sh
+    fi
+
+    # 2. bash-completion's per-user hook. Its main script sources that file
+    #    itself, so only reach for it when step 1 found nothing -- otherwise
+    #    it would run twice.
+    if [ -z "${BASH_COMPLETION_VERSINFO-}${BASH_COMPLETION-}" ] \
+           && [ -f "$HOME/.bash_completion" ]; then
         # shellcheck source=/dev/null
         . "$HOME/.bash_completion"
-    elif [ -f "$HOME/.config/bash/completion" ]; then
+    fi
+
+    # 3. The drop-ins in ~/.config/bash/completion.d, through their loader.
+    #    Unconditional -- it is additive rather than an alternative -- and
+    #    last, so the snippets can use the helpers from step 1.
+    if [ -f "$HOME/.config/bash/completion" ]; then
         # shellcheck source=/dev/null
         . "$HOME/.config/bash/completion"
     fi
-
-    if [ "${OSTYPE:0:6}" == "darwin" ]; then
-        if [ -f "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]; then
-            # shellcheck source=/dev/null
-            . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
-        fi
-    fi
-
 fi
 
 # alias definitions

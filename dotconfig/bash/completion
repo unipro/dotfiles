@@ -5,13 +5,14 @@
 # live in `completion.d' beside it, so the whole bash configuration stays
 # under ~/.config/bash.
 #
-# bash-completion has a user directory of its own, but it only reads it from
-# its main script -- which init sources *after* this file on the Homebrew
-# path -- so this cannot borrow bash-completion's helpers: $_backup_glob and
-# $_blacklist_glob are still unset here, and the @(...) pattern they were
-# used with is an extglob, which macOS's system bash 3.2 rejects at parse
-# time when extglob is off. The `case' below spells the same skip list out
-# portably. $BASH_COMPLETION_USER_DIR is deliberately not consulted: that
+# The skip list is spelled out rather than borrowed from bash-completion's
+# $_backup_glob and $_blacklist_glob. init loads bash-completion before this
+# file, so those are usually defined by now, but relying on them would tie
+# this loader to bash-completion being installed at all -- and the @(...)
+# pattern they are meant to be used with is an extglob, which macOS's system
+# bash 3.2 rejects at parse time when extglob is off.
+#
+# $BASH_COMPLETION_USER_DIR is deliberately not consulted either: that
 # variable is bash-completion's, and it points at a directory with a
 # different layout (snippets under a completions/ subdirectory, loaded on
 # demand rather than all at once).

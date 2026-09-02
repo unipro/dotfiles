@@ -129,6 +129,38 @@ so the same files work on both platforms.
 - =aliases=    : interactive aliases and helper functions
 - =completion= : loads the snippets in =~/.config/bash/completion.d/=
 
+**** Programmable completion
+=init= loads three layers, in this order, because they do different jobs
+rather than substituting for one another:
+
+1. the *system bash-completion*, which defines the helpers
+   (=_init_completion=, =_filedir=, …) that individual completion scripts
+   call
+2. =~/.bash_completion=, bash-completion's per-user hook — only when step 1
+   found nothing, since bash-completion sources that file itself
+3. the *drop-ins* in =~/.config/bash/completion.d/=, through the
+   =completion= loader; always, and last, so the snippets can use the
+   helpers from step 1
+
+Linux distributions provide step 1 at =/etc/profile.d/bash_completion.sh=.
+macOS ships none, so install it:
+
+#+begin_src sh
+brew install bash-completion@2
+#+end_src
+
+The =@2= series is the one for bash 4.1 and newer, which is what Homebrew's
+bash is; the unversioned =bash-completion= formula is the older 1.x series,
+written for the bash 3.2 that macOS itself carries. Without it, steps 2 and
+3 still work — the drop-ins just cannot rely on bash-completion's helpers.
+
+To add a completion of your own, drop the script into
+=~/.config/bash/completion.d/=:
+
+#+begin_src sh
+poetry completions bash > ~/.config/bash/completion.d/poetry
+#+end_src
+
 *** Startup files you already have
 :PROPERTIES:
 :CUSTOM_ID: startup-files
