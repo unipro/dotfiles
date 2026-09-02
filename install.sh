@@ -49,8 +49,19 @@ ZSH_CONFIG_DIR="$XDG_CONFIG_DIR/zsh"
 MKENV_SRC="bin/mkshellenv"
 LOCAL_BIN_DIR="$HOME/.local/bin"
 
+# Marker that identifies a shell startup file as this repo's own copy.
+# install.sh replaces a file carrying it and never replaces one that does
+# not: a foreign ~/.bashrc (company image, distro default, another dotfiles
+# manager) gets the wiring block appended instead, so it keeps working.
+RC_MARKER="dotfiles-managed"
+
 # Components requested on the command line, in COMPONENTS order.
 SELECTED=()
+
+# --force-rc: treat an existing startup file as ours even without the
+# marker. The rescue hatch for a file installed before the marker existed,
+# or one edited past recognition.
+FORCE_RC=0
 
 # ─── Helpers ─────────────────────────────────────────────
 usage() {
@@ -61,9 +72,15 @@ Copy this repo's dotfiles into $HOME, ~/.config and ~/.claude. With no
 COMPONENT given, every component is installed; `all` is an explicit alias
 for that.
 
+A shell startup file (~/.bashrc, ~/.bash_profile, ~/.profile, ~/.zshrc)
+is only replaced when it is absent or carries this repo's marker. Any
+other file is yours: the loader for ~/.config/<shell>/init is appended to
+it and the rest is left untouched.
+
 Options:
-  -l, --list    List the installable components and exit
-  -h, --help    Show this help and exit
+  -f, --force-rc  Replace startup files even without the marker
+  -l, --list      List the installable components and exit
+  -h, --help      Show this help and exit
 
 Examples:
   ./install.sh              # install everything
@@ -71,6 +88,7 @@ Examples:
   ./install.sh shellenv     # reinstall the env generator and re-run it
   ./install.sh doom         # only ~/.config/doom
   ./install.sh claude       # only ~/.claude/CLAUDE.md
+  ./install.sh -f bash      # take over an unmarked ~/.bashrc
 EOF
 }
 
@@ -128,6 +146,9 @@ parse_args() {
                 list_components
                 exit 0
                 ;;
+            -f|--force-rc)
+                FORCE_RC=1
+                ;;
             --)
                 shift
                 break
@@ -182,6 +203,33 @@ parse_args() {
 # but a pre-existing backup is never overwritten — so re-running keeps
 # the user's true original safe. A target that already matches the source
 # is left completely alone.
+# True when dest's contents match some version of src this repository has
+# committed -- so it is a copy install.sh shipped at some point rather than
+# something the user wrote. Replacing one of those needs no backup: git
+# history already holds it. Anything else is treated as the user's own.
+was_shipped() {
+    local src="$1" dest="$2" rev
+    command -v git >/dev/null 2>&1 || return 1
+    git rev-parse --git-dir >/dev/null 2>&1 || return 1
+    for rev in $(git log --follow --format=%H -- "$src"); do
+        if git show "$rev:$src" 2>/dev/null | cmp -s - "$dest"; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Move an existing target aside to <dest>.backup, unless a backup is
+# already there -- that one is the user's true original and outranks any
+# later state.
+backup_file() {
+    local dest="$1"
+    if [ -f "$dest" ] && [ ! -f "$dest.backup" ]; then
+        echo "Backing up existing $(tilde "$dest") to $(tilde "$dest").backup"
+        cp "$dest" "$dest.backup"
+    fi
+}
+
 copy_file() {
     local src="$1" dest="$2"
 
@@ -195,9 +243,11 @@ copy_file() {
         return 0
     fi
 
-    if [ -f "$dest" ] && [ ! -f "$dest.backup" ]; then
-        echo "Backing up existing $(tilde "$dest") to $(tilde "$dest").backup"
-        mv "$dest" "$dest.backup"
+    # No backup for a file this repo shipped: it would only preserve an older
+    # version of a tracked file, which is what the history is for. That keeps
+    # a change to a managed file from dropping a .backup on every machine.
+    if ! was_shipped "$src" "$dest"; then
+        backup_file "$dest"
     fi
     mkdir -p "$(dirname "$dest")"
     echo "Copying $src to $(tilde "$dest")"
@@ -253,14 +303,72 @@ sync_tree() {
     done < <(find "$src_dir" -type f)
 }
 
+# Install one shell startup file, without clobbering a file this repo did
+# not write. In order:
+#
+#   1. absent                    -> install the repo's copy
+#   2. carries RC_MARKER, or is a
+#      version this repo shipped -> ours, so keep it current
+#   3. --force-rc given          -> treat it as ours anyway
+#   4. already sources $3        -> wired already; leave it exactly as is
+#   5. anything else             -> yours: append the loader, nothing more
+#
+# Case 2 checks the history as well as the marker so that a copy installed
+# before the marker existed is still recognized; without that it would look
+# foreign, be found already wired, and never see another update again.
+#
+# $3 is the $HOME-relative path the file has to end up sourcing; pass "" for
+# a file that carries no hook (~/.profile), which then falls through to being
+# left alone.
+install_rc() {
+    local src="$1" dest="$2" wire="$3"
+
+    if [ ! -f "$dest" ]; then
+        copy_file "$src" "$dest"
+        return 0
+    fi
+
+    if grep -q "$RC_MARKER" "$dest" || was_shipped "$src" "$dest" \
+           || [ "$FORCE_RC" = 1 ]; then
+        copy_file "$src" "$dest"
+        return 0
+    fi
+
+    if [ -z "$wire" ]; then
+        echo "Keeping your own $(tilde "$dest") (nothing to wire)"
+        return 0
+    fi
+
+    # A sourcing line, not a mention: the path has to be preceded by `.' or
+    # `source' on a line that is not a comment, so a "see also ~/.bashrc"
+    # remark does not read as already wired.
+    if grep -qE "^[^#]*(\.|source)[[:space:]].*${wire//./\\.}" "$dest"; then
+        echo "Already wired: $(tilde "$dest") sources ~/$wire"
+        return 0
+    fi
+
+    echo "Wiring ~/$wire into your own $(tilde "$dest")"
+    backup_file "$dest"
+    cat >>"$dest" <<EOF
+
+# Added by the dotfiles install script -- load the shell configuration in
+# ~/.config. Delete this block to unhook it.
+if [ -f "\$HOME/$wire" ]; then
+    . "\$HOME/$wire"
+fi
+EOF
+}
+
 # ─── Components ──────────────────────────────────────────
 # Shell startup files and the XDG bash config. The machine-specific env
 # file it loads comes from the shellenv component.
 install_bash() {
-    local file
-    for file in ".bashrc" ".bash_profile" ".profile"; do
-        copy_file "$file" "$HOME/$file"
-    done
+    # ~/.bash_profile is wired to ~/.bashrc rather than to the init script:
+    # macOS terminals start login shells, which read only .bash_profile, so
+    # without that hop the .bashrc wiring below would never fire.
+    install_rc ".bash_profile" "$HOME/.bash_profile" ".bashrc"
+    install_rc ".bashrc" "$HOME/.bashrc" ".config/bash/init"
+    install_rc ".profile" "$HOME/.profile" ""
     copy_tree "$DOTCONFIG_DIR/bash" "$BASH_CONFIG_DIR"
 }
 
@@ -268,7 +376,7 @@ install_bash() {
 # on its own and the init script simply skips a missing env file until
 # `mkshellenv' is next run.
 install_zsh() {
-    copy_file ".zshrc" "$HOME/.zshrc"
+    install_rc ".zshrc" "$HOME/.zshrc" ".config/zsh/init"
     copy_tree "$DOTCONFIG_DIR/zsh" "$ZSH_CONFIG_DIR"
 }
 

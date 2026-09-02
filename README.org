@@ -23,7 +23,12 @@ cd ~/dotfiles
 =~/.claude= (it does not create symlinks). A target that already matches
 the source is left alone entirely; otherwise it is moved aside to
 =<file>.backup= first, and a pre-existing =.backup= is never overwritten —
-so your original files stay safe and re-running is idempotent.
+so your original files stay safe and re-running is idempotent. No backup
+is made when the target is a version this repository shipped, since git
+history already holds it.
+
+Shell startup files are the exception to "copy": see [[#startup-files][Startup files
+you already have]].
 
 The =claude= component is the one exception: it syncs *both ways* rather
 than only repo → home. See [[#claude-code][Claude Code]] below.
@@ -102,8 +107,9 @@ Linux):
 
 *** Login entry points (installed to =$HOME=)
 These are the standard bash startup files, kept as a single
-cross-platform version each and copied into =$HOME= by =install.sh=
-(an existing file is moved aside to =<file>.backup= first):
+cross-platform version each and installed into =$HOME= by =install.sh=
+(see [[#startup-files][Startup files you already have]] for what happens to a file
+that is already there):
 
 - =.bash_profile= : login shells; bootstraps Homebrew, then sources
   =~/.profile= and =~/.bashrc=
@@ -122,6 +128,50 @@ so the same files work on both platforms.
 - =init=       : entry point sourced from =~/.bashrc=; loads the rest
 - =aliases=    : interactive aliases and helper functions
 - =completion= : user bash-completion loader
+
+*** Startup files you already have
+:PROPERTIES:
+:CUSTOM_ID: startup-files
+:END:
+=install.sh= will not clobber a =~/.bashrc=, =~/.bash_profile=,
+=~/.profile= or =~/.zshrc= it did not write — a company image, a distro
+default, or another dotfiles manager keeps working. For each of those
+files, in order:
+
+1. *absent* → the repository's copy is installed
+2. *carries the =dotfiles-managed= marker*, or matches a version this
+   repository has committed → it is ours, so it is brought up to date
+3. *=--force-rc= given* → treated as ours anyway
+4. *already sources the target* → left exactly as it is
+5. *anything else* → it is yours: the loader block is *appended* and
+   nothing else in the file is touched (the original is backed up first)
+
+What gets appended is just the hook:
+
+#+begin_src sh
+# Added by the dotfiles install script -- load the shell configuration in
+# ~/.config. Delete this block to unhook it.
+if [ -f "$HOME/.config/bash/init" ]; then
+    . "$HOME/.config/bash/init"
+fi
+#+end_src
+
+so everything in =~/.config/bash/= (and =~/.config/zsh/=) still reaches
+the shell, while the surrounding file stays yours. =~/.bash_profile= is
+wired to =~/.bashrc= rather than to the init script: macOS terminals
+start login shells, which read only =.bash_profile=, so without that hop
+the =.bashrc= wiring would never fire. =~/.profile= carries no hook, so a
+foreign one is simply left alone.
+
+Step 2 consults the history, not just the marker, so a copy installed
+before the marker existed is still recognized; otherwise it would look
+foreign, be found already wired, and never see another update. When a
+file really is yours but you want the managed version anyway:
+
+#+begin_src sh
+./install.sh -f bash        # replace unmarked startup files
+rm ~/.bashrc && ./install.sh bash   # or start from scratch
+#+end_src
 
 *** The env generator (=mkshellenv=)
 =bin/mkshellenv= probes the machine — Homebrew prefix and kegs, JDK,

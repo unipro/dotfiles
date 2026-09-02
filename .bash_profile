@@ -1,4 +1,5 @@
 # ~/.bash_profile: executed by bash(1) for login shells.
+# dotfiles-managed: install.sh replaces this file wholesale.
 # shellcheck shell=bash
 #
 # Cross-platform (macOS and Linux). Bootstraps Homebrew when present,

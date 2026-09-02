@@ -1,4 +1,5 @@
 # ~/.profile: executed by the command interpreter for login shells.
+# dotfiles-managed: install.sh replaces this file wholesale.
 # shellcheck shell=sh
 #
 # Cross-platform and POSIX sh compatible. Bash login shells reach this

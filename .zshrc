@@ -1,4 +1,6 @@
 # ~/.zshrc: executed by zsh(1) for interactive shells.
+# dotfiles-managed: install.sh replaces this file wholesale. Machine-local
+# settings belong in ~/.config/zsh/aliases or ~/.config/zsh/private.
 #
 # zsh is the fallback shell here, not the daily driver (that is bash), so
 # this file stays deliberately thin: it bootstraps Homebrew, pulls in the

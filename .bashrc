@@ -1,4 +1,6 @@
 # ~/.bashrc: executed by bash(1) for interactive non-login shells.
+# dotfiles-managed: install.sh replaces this file wholesale. Machine-local
+# settings belong in ~/.config/bash/aliases or ~/.config/bash/private.
 # shellcheck shell=bash
 #
 # Cross-platform (macOS and Linux). Machine-specific environment is
