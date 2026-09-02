@@ -76,12 +76,6 @@ alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 
-# Machine-local alias definitions (not tracked in dotfiles).
-if [ -f ~/.bash_aliases ]; then
-    # shellcheck source=/dev/null
-    . ~/.bash_aliases
-fi
-
 # My bash configuration (cross-platform; loads ~/.config/bash/*).
 if [ -f ~/.config/bash/init ]; then
     # shellcheck source=/dev/null

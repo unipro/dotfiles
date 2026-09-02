@@ -1,9 +1,16 @@
-# ~/.config/bash/init: executed by .bashrc
-
-# Add the next three lines to the end of .bashrc
-# if [ -f ~/.config/bash/init ]; then
-#     . ~/.config/bash/init
-# fi
+# ~/.config/bash/init: executed by ~/.bashrc
+#
+# Entry point for the bash configuration -- the one file ~/.bashrc has to
+# source, which then pulls in everything else. install.sh does that wiring:
+# the managed ~/.bashrc carries the block, and a ~/.bashrc install.sh did not
+# write gets the block appended instead, so a shell setup that is not ours
+# keeps working (`./install.sh bash').
+#
+# The order below is deliberate. `env' -- generated per machine by mkshellenv
+# rather than hand-written -- comes first, because what follows relies on the
+# PATH it sets. `aliases' and `private' come last, so machine-local settings
+# win over anything above; `private' is git-ignored and holds whatever should
+# not leave the machine.
 
 if [ -f "$HOME/.config/bash/env" ]; then
     # shellcheck source=/dev/null
