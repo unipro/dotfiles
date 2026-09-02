@@ -1,12 +1,35 @@
-# source user completion directory definitions
-user_dir=${BASH_COMPLETION_USER_DIR:-~/.bash_completion.d}
-if [[ -d $user_dir && -r $user_dir && -x $user_dir ]]; then
+# ~/.config/bash/completion: sourced by ~/.config/bash/init
+#
+# Loads the completion snippets dropped into ~/.bash_completion.d.
+# bash-completion does this for its own user directory, but only from its
+# main script -- which init sources *after* this file, on the Homebrew path
+# -- so this cannot borrow bash-completion's helpers: $_backup_glob and
+# $_blacklist_glob are still unset here, and the @(...) pattern they were
+# used with is an extglob, which macOS's system bash 3.2 rejects at parse
+# time when extglob is off. That printed three syntax errors on every
+# /bin/bash start and left the skip list matching nothing but the empty
+# string. The `case' below spells the same list out portably.
+
+user_dir="${BASH_COMPLETION_USER_DIR:-$HOME/.bash_completion.d}"
+if [ -d "$user_dir" ] && [ -r "$user_dir" ] && [ -x "$user_dir" ]; then
     for i in "$user_dir"/*; do
-        [[ ${i##*/} != @($_backup_glob|Makefile*|$_blacklist_glob) \
-            && -f $i && -r $i ]] && . "$i"
+        case "${i##*/}" in
+            # Editor and packaging leftovers, plus the Makefile that ships
+            # in some completion directories.
+            *'~' | *.bak | *.orig | *.rej | *.swp | '#'*'#' | \
+            *.dpkg-old | *.dpkg-dist | *.dpkg-new | *.dpkg-tmp | \
+            *.rpmorig | *.rpmnew | *.rpmsave | Makefile*)
+                continue
+                ;;
+        esac
+        # An unmatched glob leaves the pattern itself in $i; -f filters it.
+        if [ -f "$i" ] && [ -r "$i" ]; then
+            # shellcheck source=/dev/null
+            . "$i"
+        fi
     done
 fi
-unset user_dir i _blacklist_glob
+unset user_dir i
 
 # Local Variables:
 # mode: shell-script
