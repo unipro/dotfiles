@@ -180,9 +180,21 @@ parse_args() {
 
 # Copy src to dest. An existing target is moved aside to <dest>.backup,
 # but a pre-existing backup is never overwritten — so re-running keeps
-# the user's true original safe.
+# the user's true original safe. A target that already matches the source
+# is left completely alone.
 copy_file() {
     local src="$1" dest="$2"
+
+    # Nothing to install and nothing worth preserving: a backup here would
+    # just duplicate the file it is backing up, and re-running install.sh
+    # for one component would litter $HOME with copies of files that never
+    # differed. Skipping the copy as well leaves mtimes untouched, which
+    # keeps the newest-wins sync in sync_file honest.
+    if [ -f "$dest" ] && cmp -s "$src" "$dest"; then
+        echo "Unchanged: $(tilde "$dest")"
+        return 0
+    fi
+
     if [ -f "$dest" ] && [ ! -f "$dest.backup" ]; then
         echo "Backing up existing $(tilde "$dest") to $(tilde "$dest").backup"
         mv "$dest" "$dest.backup"

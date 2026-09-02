@@ -20,9 +20,10 @@ cd ~/dotfiles
 #+end_src
 
 =install.sh= *copies* the managed files into =$HOME=, =~/.config= and
-=~/.claude= (it does not create symlinks). Any existing target is moved
-aside to =<file>.backup= first, and a pre-existing =.backup= is never
-overwritten — so your original files stay safe and re-running is idempotent.
+=~/.claude= (it does not create symlinks). A target that already matches
+the source is left alone entirely; otherwise it is moved aside to
+=<file>.backup= first, and a pre-existing =.backup= is never overwritten —
+so your original files stay safe and re-running is idempotent.
 
 The =claude= component is the one exception: it syncs *both ways* rather
 than only repo → home. See [[#claude-code][Claude Code]] below.
