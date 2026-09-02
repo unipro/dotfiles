@@ -110,8 +110,9 @@ if [ "${OSTYPE:0:6}" == "darwin" ]; then
     # python
     add_bin_path "/Library/Frameworks/Python.framework/Versions/Current/bin"
 
-    # nodejs
-    add_bin_path "$BREW_PREFIX/opt/node@22/bin"
+    # nodejs. Left out on purpose: node is managed by fnm (see the node
+    # section below), and a keg on PATH would shadow the fnm shims.
+    # add_bin_path "$BREW_PREFIX/opt/node@22/bin"
 
     # ruby
     add_bin_path "$BREW_PREFIX/opt/ruby/bin"
@@ -209,14 +210,28 @@ fi
 MY_GOPATH="${HOME}/go"
 add_bin_path "$MY_GOPATH/bin"
 
-# node
+# node. fnm is the version manager in use; nvm is kept as a fallback for
+# machines that still have it -- running both would leave two managers
+# fighting over PATH.
+#
+# `fnm env' mints a fresh FNM_MULTISHELL_PATH per shell session, so what gets
+# written out is the *eval line*, not its output: embedding today's output
+# would pin every future shell to one temp directory that dies with the shell
+# that made it. The `default' alias also goes on PATH statically, behind that
+# per-session directory, as a stable fallback for anything that inherits PATH
+# and outlives the session it came from. Both live in the env file, which only
+# interactive shells read, so a truly non-interactive context (cron, a
+# GUI-launched app) still sees no node from here.
 add_bin_path "$HOME/node_modules/.bin"
-if [ -d "$HOME/.nvm" ]; then
+if command -v fnm &> /dev/null; then
+    MY_FNM=1
+    add_bin_path "${FNM_DIR:-$HOME/.local/share/fnm}/aliases/default/bin"
+elif [ -d "$HOME/.nvm" ]; then
     MY_NVM_DIR="$HOME/.nvm"
-    if [ -f "$NVM_DIR/nvm.sh" ]; then
+    if [ -f "$MY_NVM_DIR/nvm.sh" ]; then
         MY_NVM_SH="$MY_NVM_DIR/nvm.sh"
     fi
-    if [ -f "$NVM_DIR/bash_completion" ]; then
+    if [ -f "$MY_NVM_DIR/bash_completion" ]; then
         MY_NVM_COMPLETION="$MY_NVM_DIR/bash_completion"
     fi
 elif [ -d "$BREW_PREFIX/opt/nvm" ]; then
@@ -278,6 +293,12 @@ fi
     fi
     if [ -n "$MY_GOPATH" ]; then
         echo "export GOPATH=\"$MY_GOPATH\""
+    fi
+    # The eval lines are meant to stay literal in the generated file.
+    # shellcheck disable=SC2016
+    if [ -n "$MY_FNM" ]; then
+        echo 'eval "$(fnm env --use-on-cd --shell bash)"'
+        echo 'eval "$(fnm completions --shell bash)"'
     fi
     if [ -n "$MY_NVM_DIR" ]; then
         echo "export NVM_DIR=\"$MY_NVM_DIR\""
@@ -354,6 +375,14 @@ mkdir -p "$HOME/.config/zsh"
     fi
     if [ -n "$MY_GOPATH" ]; then
         echo "export GOPATH=\"$MY_GOPATH\""
+    fi
+    # The eval lines are meant to stay literal in the generated file.
+    # shellcheck disable=SC2016
+    if [ -n "$MY_FNM" ]; then
+        echo 'eval "$(fnm env --use-on-cd --shell zsh)"'
+        # fnm's zsh completions end in `compdef', so they need compinit to have
+        # run already -- ~/.config/zsh/init does that before sourcing this file.
+        echo 'eval "$(fnm completions --shell zsh)"'
     fi
     if [ -n "$MY_NVM_DIR" ]; then
         echo "export NVM_DIR=\"$MY_NVM_DIR\""

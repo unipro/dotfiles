@@ -1,0 +1,43 @@
+# ~/.config/zsh/init: executed by .zshrc
+#
+# Counterpart to ~/.config/bash/init. The aliases and private files are
+# shared with bash instead of being duplicated: both are POSIX-ish enough
+# for zsh, and a zsh-specific override takes precedence when it exists.
+
+# Completion. This has to come *before* the generated env file: hooks in
+# there (fnm's completions, for one) call compdef, which only exists once
+# compinit has run.
+autoload -Uz compinit && compinit -i
+autoload -Uz bashcompinit && bashcompinit
+
+if [ -f "$HOME/.config/zsh/env" ]; then
+    # shellcheck source=/dev/null
+    . "$HOME/.config/zsh/env"
+fi
+
+export ALTERNATE_EDITOR=""
+export EDITOR="emacsclient -t"                  # $EDITOR opens in terminal
+export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode
+
+# alias definitions (zsh-specific first, else share bash's).
+for _f in "$HOME/.config/zsh/aliases" "$HOME/.config/bash/aliases"; do
+    if [ -f "$_f" ]; then
+        # shellcheck source=/dev/null
+        . "$_f"
+        break
+    fi
+done
+
+# private definitions (machine-local, never committed).
+for _f in "$HOME/.config/zsh/private" "$HOME/.config/bash/private"; do
+    if [ -f "$_f" ]; then
+        # shellcheck source=/dev/null
+        . "$_f"
+        break
+    fi
+done
+unset _f
+
+# Local Variables:
+# mode: shell-script
+# End:

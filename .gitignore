@@ -3,3 +3,5 @@
 # Machine-specific files generated/managed locally, never committed.
 dotconfig/bash/env
 dotconfig/bash/private
+dotconfig/zsh/env
+dotconfig/zsh/private
