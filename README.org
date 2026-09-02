@@ -127,7 +127,7 @@ so the same files work on both platforms.
 
 - =init=       : entry point sourced from =~/.bashrc=; loads the rest
 - =aliases=    : interactive aliases and helper functions
-- =completion= : user bash-completion loader
+- =completion= : loads the snippets in =~/.config/bash/completion.d/=
 
 *** Startup files you already have
 :PROPERTIES:

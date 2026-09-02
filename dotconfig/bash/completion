@@ -1,18 +1,24 @@
 # ~/.config/bash/completion: sourced by ~/.config/bash/init
 #
-# Loads the completion snippets dropped into ~/.bash_completion.d.
-# bash-completion does this for its own user directory, but only from its
-# main script -- which init sources *after* this file, on the Homebrew path
-# -- so this cannot borrow bash-completion's helpers: $_backup_glob and
+# Loader for the completion snippets dropped into
+# ~/.config/bash/completion.d -- the loader is `completion', the drop-ins
+# live in `completion.d' beside it, so the whole bash configuration stays
+# under ~/.config/bash.
+#
+# bash-completion has a user directory of its own, but it only reads it from
+# its main script -- which init sources *after* this file on the Homebrew
+# path -- so this cannot borrow bash-completion's helpers: $_backup_glob and
 # $_blacklist_glob are still unset here, and the @(...) pattern they were
 # used with is an extglob, which macOS's system bash 3.2 rejects at parse
-# time when extglob is off. That printed three syntax errors on every
-# /bin/bash start and left the skip list matching nothing but the empty
-# string. The `case' below spells the same list out portably.
+# time when extglob is off. The `case' below spells the same skip list out
+# portably. $BASH_COMPLETION_USER_DIR is deliberately not consulted: that
+# variable is bash-completion's, and it points at a directory with a
+# different layout (snippets under a completions/ subdirectory, loaded on
+# demand rather than all at once).
 
-user_dir="${BASH_COMPLETION_USER_DIR:-$HOME/.bash_completion.d}"
-if [ -d "$user_dir" ] && [ -r "$user_dir" ] && [ -x "$user_dir" ]; then
-    for i in "$user_dir"/*; do
+comp_dir="$HOME/.config/bash/completion.d"
+if [ -d "$comp_dir" ] && [ -r "$comp_dir" ] && [ -x "$comp_dir" ]; then
+    for i in "$comp_dir"/*; do
         case "${i##*/}" in
             # Editor and packaging leftovers, plus the Makefile that ships
             # in some completion directories.
@@ -29,7 +35,7 @@ if [ -d "$user_dir" ] && [ -r "$user_dir" ] && [ -x "$user_dir" ]; then
         fi
     done
 fi
-unset user_dir i
+unset comp_dir i
 
 # Local Variables:
 # mode: shell-script
