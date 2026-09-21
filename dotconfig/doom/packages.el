@@ -23,6 +23,21 @@
 (package! claude-code-ide
   :recipe (:host github :repo "manzaltu/claude-code-ide.el"))
 
+;; Codex IDE -- a Codex client that is not a terminal wrapper: it speaks to
+;; `codex app-server' over stdio and renders the session into ordinary Emacs
+;; buffers, so no :term backend is involved (see config.el). Needs the `codex'
+;; CLI on PATH; here that comes from the Homebrew cask.
+;;
+;; `:files' is widened for one file. The optional Emacs MCP bridge -- codex's
+;; counterpart to `claude-code-ide-emacs-tools-setup' -- is a python script the
+;; package looks for at `bin/codex-ide-mcp-server.py' *relative to its own load
+;; directory*, i.e. straight's build/ dir, and straight's default directive
+;; only links .el files there. The inner list keeps it under `bin/' rather than
+;; flattening it into the build root, which is where the lookup expects it.
+(package! codex-ide
+  :recipe (:host github :repo "dgillis/emacs-codex-ide"
+           :files (:defaults ("bin" "bin/codex-ide-mcp-server.py"))))
+
 ;; Terminal backend for claude-code-ide. Ghostel drives libghostty-vt (the
 ;; VT engine behind Ghostty) through a native module, so it avoids the
 ;; flicker and reflow artifacts vterm and eat show while Claude redraws its

@@ -390,6 +390,38 @@
   :config
   (claude-code-ide-emacs-tools-setup))
 
+;; codex-ide
+;; Nothing here mirrors the ghostel setup above on purpose: codex-ide is not a
+;; terminal wrapper. It runs `codex app-server' over stdio and renders the
+;; transcript, diffs and file links into ordinary Emacs buffers, so there is no
+;; TUI to repaint and no terminal backend to choose.
+(use-package! codex-ide
+  :commands (codex-ide codex-ide-continue codex-ide-menu)
+  :custom
+  ;; Session buffers are real, long-lived editing buffers -- the active prompt
+  ;; is editable in place -- so the package's own display policy (see
+  ;; codex-ide-window.el) applies instead of the popup manager; `vertical' is
+  ;; the knob it offers, and it puts a new session beside the code rather than
+  ;; over it. The popup rule below is what keeps `:ui popup +all' out of the way.
+  (codex-ide-new-session-split 'vertical)
+  ;; The Emacs tool bridge is codex's counterpart to
+  ;; `claude-code-ide-emacs-tools-setup': a stdlib-only python MCP server that
+  ;; calls back into this Emacs over `emacsclient', so Codex can see the live
+  ;; buffer list, flycheck diagnostics, xref and the focused region. `t' rather
+  ;; than the default `prompt' -- the answer is always yes here -- and the
+  ;; second setting lets it start the Emacs server without asking either.
+  (codex-ide-want-mcp-bridge t)
+  (codex-ide-suppress-server-start-prompts t))
+
+;; `:ui popup +all' (init.el) turns every `*...*' buffer into a transient
+;; popup: ESC dismisses it and `+popup-defaults' kills it a few seconds after
+;; it is buried. That is wrong for every buffer in the `*codex...*' family --
+;; session, session diff, command output, session list -- which are all meant
+;; to stay. Opting the family out is simpler than restating codex-ide-window.el
+;; as popup rules, and the vertical split above covers the "don't take over my
+;; window" part.
+(set-popup-rule! "^\\*[Cc]odex" :ignore t)
+
 ;; Doom owns `SPC '' (vertico-repeat, "Resume last search"), so the AI menu
 ;; lives on `SPC l' instead — free unless :tools collab is enabled, which
 ;; claims it for "live share/collab".
@@ -402,6 +434,18 @@
     :desc "Switch to Claude buffer" "b" #'claude-code-ide-switch-to-buffer
     :desc "Send prompt"             "p" #'claude-code-ide-send-prompt
     :desc "Toggle Claude Code"      "t" #'claude-code-ide-toggle
+    ;; codex-ide -- its own sub-prefix because the single letters above are
+    ;; spoken for, and codex has more entry points worth a key than Claude does.
+    (:prefix ("x" . "Codex")
+      :desc "Codex"                   "x" #'codex-ide
+      :desc "Menu (Codex)"            "m" #'codex-ide-menu
+      :desc "Continue most recent"    "c" #'codex-ide-continue
+      :desc "Send prompt"             "p" #'codex-ide-prompt
+      :desc "Switch to Codex buffer"  "b" #'codex-ide-switch-to-buffer
+      :desc "Live session buffers"    "l" #'codex-ide-session-buffer-list
+      :desc "Manage sessions"         "s" #'codex-ide-status
+      :desc "Session diff"            "d" #'codex-ide-session-diff-open
+      :desc "Stop Codex session"      "q" #'codex-ide-stop)
     ;; gptel
     ;; :desc "Chat (gptel)"            "a" #'gptel
     ;; :desc "Menu (switch backend)"   "m" #'gptel-menu
