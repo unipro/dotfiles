@@ -422,35 +422,38 @@
 ;; window" part.
 (set-popup-rule! "^\\*[Cc]odex" :ignore t)
 
-;; Doom owns `SPC '' (vertico-repeat, "Resume last search"), so the AI menu
-;; lives on `SPC l' instead — free unless :tools collab is enabled, which
-;; claims it for "live share/collab".
+;; This config runs without evil (see init.el), so `map! :leader' lands on
+;; `C-c', not `SPC' -- and `C-c l' is the slot Doom reserves for <localleader>
+;; (config/default/+emacs-bindings.el:5,25). Binding real commands there would
+;; shadow every major mode's localleader keys through general-override-mode-map,
+;; so the agents live on `a', which nothing else claims at the top level.
+;; gptel is not bound here: `:tools llm' already puts a full menu on `C-c o l'.
+;; Claude and Codex get parallel sub-prefixes -- same verbs at the same depth,
+;; first key repeated to start a session -- and the letters mirror each
+;; package's own transient menu so the two surfaces agree.
 (map! :leader
-  (:prefix-map ("l" . "AI/LLM")
-    ;; claude-code-ide
-    :desc "Claude Code"             "c" #'claude-code-ide
-    :desc "Menu (Claude Code)"      "m" #'claude-code-ide-menu
-    :desc "Quit Claude Code"        "q" #'claude-code-ide-quit
-    :desc "Switch to Claude buffer" "b" #'claude-code-ide-switch-to-buffer
-    :desc "Send prompt"             "p" #'claude-code-ide-send-prompt
-    :desc "Toggle Claude Code"      "t" #'claude-code-ide-toggle
-    ;; codex-ide -- its own sub-prefix because the single letters above are
-    ;; spoken for, and codex has more entry points worth a key than Claude does.
+  (:prefix-map ("a" . "AI agents")
+    (:prefix ("c" . "Claude Code")
+      :desc "Start"            "c" #'claude-code-ide
+      :desc "Menu"             "m" #'claude-code-ide-menu
+      :desc "Continue"         "C" #'claude-code-ide-continue
+      :desc "Send prompt"      "p" #'claude-code-ide-send-prompt
+      :desc "Insert selection" "i" #'claude-code-ide-insert-at-mentioned
+      :desc "Switch to buffer" "b" #'claude-code-ide-switch-to-buffer
+      :desc "List sessions"    "l" #'claude-code-ide-list-sessions
+      :desc "Toggle windows"   "w" #'claude-code-ide-toggle
+      :desc "Stop"             "q" #'claude-code-ide-stop)
     (:prefix ("x" . "Codex")
-      :desc "Codex"                   "x" #'codex-ide
-      :desc "Menu (Codex)"            "m" #'codex-ide-menu
-      :desc "Continue most recent"    "c" #'codex-ide-continue
-      :desc "Send prompt"             "p" #'codex-ide-prompt
-      :desc "Switch to Codex buffer"  "b" #'codex-ide-switch-to-buffer
-      :desc "Live session buffers"    "l" #'codex-ide-session-buffer-list
-      :desc "Manage sessions"         "s" #'codex-ide-status
-      :desc "Session diff"            "d" #'codex-ide-session-diff-open
-      :desc "Stop Codex session"      "q" #'codex-ide-stop)
-    ;; gptel
-    ;; :desc "Chat (gptel)"            "a" #'gptel
-    ;; :desc "Menu (switch backend)"   "m" #'gptel-menu
-    ;; :desc "Inline rewrite"          "r" #'gptel-rewrite
-    ))
+      :desc "Start"            "x" #'codex-ide
+      :desc "Menu"             "m" #'codex-ide-menu
+      :desc "Continue"         "c" #'codex-ide-continue
+      :desc "Send prompt"      "p" #'codex-ide-prompt
+      :desc "Switch to buffer" "b" #'codex-ide-switch-to-buffer
+      :desc "Live buffers"     "l" #'codex-ide-session-buffer-list
+      :desc "Manage sessions"  "s" #'codex-ide-status
+      :desc "Session diff"     "d" #'codex-ide-session-diff-open
+      :desc "Interrupt turn"   "i" #'codex-ide-interrupt
+      :desc "Stop"             "q" #'codex-ide-stop)))
 
 ;; auto-customisations
 (setq-default custom-file (expand-file-name "custom.el" doom-user-dir))
