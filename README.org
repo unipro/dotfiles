@@ -329,5 +329,21 @@ One caveat: Git restamps the files it checks out, so a file touched by
 =git pull= looks newer than an older local edit and wins. Run
 =./install.sh claude= *before* pulling to capture local edits first.
 
+*** Working on this repository with Claude Code
+Two more files carry the Claude Code name and are *not* installed
+anywhere — they configure sessions that work **on** this repository,
+rather than being part of what it ships:
+
+- =CLAUDE.md= (repository root) : conventions for editing these dotfiles
+  — the copy-not-symlink rule, what must keep parsing under macOS's bash
+  3.2, and how changes are verified
+- =.claude/settings.json=       : a shared allow-list for the read-only
+  commands this repository is inspected with (=git diff=, =shellcheck=,
+  =bash -n=, =./install.sh --list=)
+
+Neither belongs to any component, so =install.sh= never copies them;
+only =dotclaude/= reaches =~/.claude=. Machine-local Claude settings go
+in =.claude/settings.local.json=, which is git-ignored.
+
 ** License
 Feel free to use and modify these files as needed.

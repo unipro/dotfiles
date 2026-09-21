@@ -5,3 +5,6 @@ dotconfig/bash/env
 dotconfig/bash/private
 dotconfig/zsh/env
 dotconfig/zsh/private
+
+# Claude Code: project settings are shared, per-machine overrides are not.
+.claude/settings.local.json
