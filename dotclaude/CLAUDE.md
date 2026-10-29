@@ -14,14 +14,25 @@ monaco, sogne 등 TvingCorp 소속 저장소에서 작업할 때 지키는 순�
 3. **PR** — 제목은 이슈 키 접두어 + **영문** 제목, 본문은 **한글**로 쓴다.
    예: `[MP-1234] Derive protocol from platform`
 
+## Atlassian 도구
+
+- Jira/Confluence 등 Atlassian 작업(조회·이슈 생성·문서 작성)은 모든 프로젝트에서
+  **twg CLI**(`twg` 스킬)를 사용한다. `JIRA_API_TOKEN`/`CONFLUENCE_API_TOKEN`
+  환경변수 기반 도구나 직접 API 호출보다 twg를 우선한다.
+- twg 인증이 없으면(`AUTH_REQUIRED`) 사용자에게 **별도 터미널 창**에서
+  `twg login`을 실행해 달라고 요청한다 (`! twg login`은 TTY가 없어 실패한다).
+
 ## 커밋/푸시
 
 - 커밋은 요청받았을 때만 한다.
-- **`git push`는 하지 않는다** — push는 사용자가 직접 한다.
+- push는 필요하면 직접 해도 된다 (사용자 확인 불필요).
 - 커밋 메시지에 Claude/AI attribution 트레일러(`Co-Authored-By: Claude` 등)를
   **붙이지 않는다**.
 
 ## 소통
 
 - 사용자는 한국어로 소통한다 — **한국어로 답한다**.
+- 사용자는 영어 연습을 위해 영어를 섞어 쓴다. 영어 문장에 교정할 점(문법,
+  관사, 더 자연스러운 표현)이 있으면 답변 끝에 짧게 알려준다. 고칠 게 없으면
+  언급하지 않는다. 요청 자체는 평소대로 수행한다.
 - 터미널은 스크롤이 되지 않으므로, 긴 산출물은 파일로 쓰고 채팅에는 요약만 남긴다.
