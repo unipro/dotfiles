@@ -39,3 +39,9 @@ window-padding-x           = 4
 window-padding-y           = 4
 scrollback-limit           = 10000
 confirm-close-surface      = false
+
+# ─── Machine-local overrides ─────────────────────────────
+# ~/.config/ghostty/local is not in the repo; create it per machine
+# (e.g. `font-size = 12` on a Linux desktop). Included files load after
+# this one, so their values win. `?` makes the include optional.
+config-file = ?local

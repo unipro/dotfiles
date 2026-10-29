@@ -43,7 +43,8 @@
 
 - `dotconfig/{bash,zsh}/env`, `dotconfig/{bash,zsh}/private` — `mkshellenv`가
   머신마다 생성하거나 사용자가 손으로 두는 것. `.gitignore`에 있다.
-- `~/.gitconfig.local`, `~/.config/doom/{local,custom}.el` — 머신 로컬이라
+- `~/.gitconfig.local`, `~/.config/doom/{local,custom}.el`,
+  `~/.config/ghostty/local` — 머신 로컬이라
   저장소에 존재하지 않는다.
 - `install.sh`가 남긴 `<file>.backup`.
 

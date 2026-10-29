@@ -292,6 +292,19 @@ Machine-local overrides go in =~/.config/doom/local.el= (and
 =custom.el=); both are git-ignored and never committed. After changing
 =init.el= or =packages.el=, run =doom sync=.
 
+** Ghostty
+The [[https://ghostty.org][Ghostty]] configuration lives in =dotconfig/ghostty/config= and is
+installed to =~/.config/ghostty/= by =install.sh=.
+
+Machine-local overrides go in =~/.config/ghostty/local=, which the
+shared config includes optionally (=config-file = ?local=) and which is
+never committed. Values there win over the shared ones — e.g. a Linux
+desktop that needs a smaller font:
+
+#+begin_src conf
+font-size = 12
+#+end_src
+
 ** Claude Code
 :PROPERTIES:
 :CUSTOM_ID: claude-code
